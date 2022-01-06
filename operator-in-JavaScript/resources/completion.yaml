@@ -1,6 +1,6 @@
 apiVersion: copilot.poc.com/v1
 kind: Completion
 metadata:
-  name: completion-sample
+  name: completion
 spec:
   userPrompt: "# Deploy a Django server with a MySQL deployment which stores data in a 20Gi PVC\nkind: Deployment\napiVersion:"
