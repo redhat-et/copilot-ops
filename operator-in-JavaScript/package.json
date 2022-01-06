@@ -1,0 +1,33 @@
+{
+  "name": "ts-operator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "watch": "npx tsc -w",
+    "clean": "rm -rf dist node_modules",
+    "start": "nodemon dist/index.js",
+    "lint": "eslint . --ext .ts",
+    "lint-and-fix": "eslint . --ext .ts --fix"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@dot-i/k8s-operator": "^1.2.0",
+    "@kubernetes/client-node": "^0.14.3",
+    "axios": "^0.24.0",
+    "typescript": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.3.0"
+  }
+}
