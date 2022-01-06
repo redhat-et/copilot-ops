@@ -9,6 +9,7 @@
     "watch": "npx tsc -w",
     "clean": "rm -rf dist node_modules",
     "start": "nodemon dist/index.js",
+    "dev": "nodemon dist/index.js --trace-warnings",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix"
   },
