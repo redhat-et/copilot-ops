@@ -1,4 +1,4 @@
-apiVersion: copilot.example.com/v1
+apiVersion: copilot.poc.com/v1
 kind: Completion
 metadata:
   name: completion-sample

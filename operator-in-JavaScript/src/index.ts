@@ -3,7 +3,7 @@ import * as k8s from "@kubernetes/client-node";
 import * as fs from "fs";
 import axios from "axios";
 
-const COMPLETION_GROUP = "copilot.example.com";
+const COMPLETION_GROUP = "copilot.poc.com";
 const COMPLETION_VERSION = "v1";
 const COMPLETION_PLURAL = "completions";
 
