@@ -1,0 +1,6 @@
+apiVersion: complete.yaml-copilot.com/v1alpha1
+kind: Completion
+metadata:
+  name: completion-sample
+spec:
+  # Add fields here
