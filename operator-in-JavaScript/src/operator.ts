@@ -17,7 +17,7 @@ export default class CompletionOperator extends Operator {
     await this.watchResource(this.group, this.version, this.plural, async (e) => {
       if (e.type === ResourceEventType.Added || e.type === ResourceEventType.Modified) {
         if (
-          !(await this.handleResourceFinalizer(e, "mycustomresources.dot-i.com", (event) =>
+          !(await this.handleResourceFinalizer(e, `${this.plural}.${this.group}`, (event) =>
             this.resourceDeleted(event),
           ))
         ) {
@@ -33,12 +33,8 @@ export default class CompletionOperator extends Operator {
     const object = e.object as CompletionResource;
     // const metadata = object.metadata;
     const { metadata, status } = object;
-    console.log("metadata", metadata);
-    console.log("e.meta", e.meta);
 
     if (!status || status.observedGeneration !== metadata.generation) {
-      console.log("modifying", metadata.name);
-      console.log("object", object);
       const openAIUrl = "https://api.openai.com/v1/engines/davinci-codex/completions";
       // request openai API to complete data
 
@@ -64,10 +60,7 @@ export default class CompletionOperator extends Operator {
       await axios.post(openAIUrl, body, { headers }).then(async (response) => {
         // update the object with the competion result
         if (response.status == 200 && response.data.choices) {
-          console.log("before sending, the object is ", object);
           completion = response.data.choices[0]!.text;
-          // console.log("received completion from openai: ", completion);
-          // console.log("now we update the objects completion", object);
         }
       });
 
