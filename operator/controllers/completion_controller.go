@@ -25,8 +25,21 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
+	"strings"
 
+	// "gopkg.in/yaml.v2"
+
+	"gopkg.in/yaml.v2"
+	k8syaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+
+	// appsv1 "k8s.io/api/apps/v1"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -80,14 +93,21 @@ type OpenAIResponseBody struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
 func (r *CompletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+
+	logger.Info("Getting kubeconfig & starting dynamic client")
+	kubeConfig := ctrl.GetConfigOrDie()
+	dynamicClient, err := dynamic.NewForConfig(kubeConfig)
+	if err != nil {
+		logger.Info("Error creating dynamic client", "error", err)
+	}
 
 	// update the Completion status
 	obj := &completev1alpha1.Completion{}
 
 	// get the Completion object
 	if err := r.Client.Get(ctx, req.NamespacedName, obj); err != nil {
-		fmt.Printf("Error getting Completion instance: %v\n", err)
+		logger.Error(err, "Error getting Completion instance")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
@@ -96,17 +116,82 @@ func (r *CompletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, nil
 	}
 
-	completion, err := createCompletion(obj.Spec.UserPrompt)
+	completion, err := createCompletion(obj)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-
-	// request openai api here
-	obj.Status.Completion = completion
+	logger.Info("Completion created", "completion", completion)
+	obj.Status.Completions = strings.Split(completion, "---")
 	obj.Status.ObservedGeneration = obj.GetObjectMeta().GetGeneration()
 
-	// update the status of the custom resource
-	// err = r.Status().Update(ctx, completion)
+	// create a list to hold the maps for the unmarshaled yamls
+	// var yamlList []map[string]interface{}
+
+	// split the obtained completion & try to decode it into YAML objects so we can try to create them through the client
+	completionSplit := strings.Split(completion, "---")
+	for _, generatedYaml := range completionSplit {
+		logger.Info("now processing generated YAML", "generatedYaml", generatedYaml)
+		if generatedYaml == "" {
+			continue
+		}
+		// deconstruct the string into yaml and attempt to create it through the k8s api
+		m := make(map[interface{}]interface{})
+
+		err := yaml.Unmarshal([]byte(generatedYaml), &m)
+		if err != nil {
+			logger.Error(err, "could not unmarshal the yaml")
+			continue
+		}
+		logger.Info("unmarshalled yaml", "yaml", m)
+		// obtain the group and kind from the yaml
+		apiGroup, apiVersion := getApiGroupAndVersion(m["apiVersion"].(string))
+		kind := m["kind"].(string)
+		logger.Info("attempting to create object of the types", "apiGroup", apiGroup, "apiVersion", apiVersion, "kind", kind)
+		gvr := schema.GroupVersionResource{
+			Group:    apiGroup,
+			Version:  apiVersion,
+			Resource: strings.ToLower(kind) + "s",
+		}
+
+		// convert from singular to plural
+		logger.Info("Creating object", "gvr", gvr)
+		// create the object through the client
+		decUnstructured := k8syaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+		unstructuredK8sResource := &unstructured.Unstructured{}
+		_, _, err = decUnstructured.Decode([]byte(generatedYaml), nil, unstructuredK8sResource)
+		if err != nil {
+			logger.Error(err, "Error decoding generated YAML")
+		}
+
+		_, err = dynamicClient.Resource(gvr).Namespace("default").Create(context.Background(), unstructuredK8sResource, v1.CreateOptions{})
+		if err != nil {
+			logger.Error(err, "cannot create the resource")
+		}
+
+		// if generatedYaml == "" {
+		// 	continue
+		// }
+		// // deconstruct the string into yaml and attempt to create it through the k8s api
+		// m := make(map[interface{}]interface{})
+
+		// err := yaml.Unmarshal([]byte(generatedYaml), &m)
+		// if err != nil {
+		// 	logger.Error(err, "could not unmarshal the yaml")
+		// 	continue
+		// }
+
+		// // convert m to be of type map[string]interface{}
+		// nm := make(map[string]interface{})
+		// for k, v := range m {
+		// 	nm[k.(string)] = v
+		// }
+
+		// // add to list
+		// yamlList = append(yamlList, nm)
+	}
+
+	// try and apply the YAMLs
+	// ApplyYamls(ctx, r.Client, dynamicClient, yamlList)
 	statusErr := r.Client.Status().Update(ctx, obj)
 	if err == nil { // Don't mask previous error
 		err = statusErr
@@ -116,7 +201,7 @@ func (r *CompletionReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 }
 
 // get completion from openai
-func createCompletion(prompt string) (string, error) {
+func createCompletion(obj *completev1alpha1.Completion) (string, error) {
 	/*
 			Create an HTTPS request from Golang based on the following cURL command:
 
@@ -137,14 +222,21 @@ func createCompletion(prompt string) (string, error) {
 	const url = "https://api.openai.com/v1/engines/davinci-codex/completions"
 	var OPENAI_API_KEY = os.Getenv("OPENAI_API_KEY")
 
+	var fullUserPrompt = `
+## Below is a comment describing a desired deployment in Kubernetes, followed by YAMLs to create the described setup
+
+# Description: ` + obj.Spec.UserPrompt + "\n---"
+
+	// fmt.Printf("fullUserPrompt:---\n%s\n---", fullUserPrompt)
+
 	var requestBody = OpenAIRequestBody{
-		Prompt:           prompt,
+		Prompt:           fullUserPrompt,
 		Temperature:      0.1,
-		MaxTokens:        1024,
+		MaxTokens:        obj.Spec.MaxTokens,
 		TopP:             1,
 		FrequencyPenalty: 0,
 		PresencePenalty:  0,
-		Stop:             []string{"\n\n"},
+		// Stop:             []string{""},
 	}
 
 	// marshal above json body into a string
@@ -187,4 +279,115 @@ func (r *CompletionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&completev1alpha1.Completion{}).
 		Complete(r)
+}
+
+func ApplyYamls(ctx context.Context, client client.Client, dc dynamic.Interface, yamlList []map[string]interface{}) error {
+	// gvr := schema.GroupVersionResource{
+	// 	Group:    "",
+	// 	Version:  "v1",
+	// 	Resource: "pods",
+	// }
+	// pods, err := dc.Resource(gvr).Namespace("kube-system").List(context.Background(), v1.ListOptions{})
+	// if err != nil {
+	// 	fmt.Printf("error getting pods: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// for _, pod := range pods.Items {
+	// 	fmt.Printf(
+	// 		"Name: %s\n",
+	// 		pod.Object["metadata"].(map[string]interface{})["name"],
+	// 	)
+	// }
+
+	// go through our list of yaml resources & attempt to apply each one
+	for _, rsrc := range yamlList {
+		// list of failpoints
+		var failpoints map[string]bool = map[string]bool{}
+
+		kind, ok := rsrc["kind"]
+		failpoints["kind"] = ok
+
+		apiVersionStr, ok := rsrc["apiVersion"]
+		failpoints["apiVersion"] = ok
+
+		spec, ok := rsrc["spec"]
+		failpoints["spec"] = ok
+
+		metadata, ok := rsrc["metadata"]
+		failpoints["metadata"] = ok
+
+		// make sure metadata is not empty
+		if metadata == nil {
+			metadata = map[string]interface{}{}
+		}
+
+		// create the yaml object
+		obj := &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"kind":       kind,
+				"apiVersion": apiVersionStr,
+				"spec":       spec,
+				"metadata":   metadata,
+			},
+		}
+
+		fmt.Printf("current values for object: %+v\n", obj)
+		// get types of all fields in the map
+		for k, v := range rsrc {
+			fmt.Printf("key: %s, value: %+v\n", k, reflect.TypeOf(v))
+		}
+
+		// set labels
+		_, ok = obj.Object["metadata"]
+		if !ok || obj.Object["metadata"] == nil {
+			obj.Object["metadata"] = map[interface{}]interface{}{}
+		}
+		labels, ok := obj.Object["metadata"].(map[interface{}]interface{})["labels"]
+		fmt.Printf("labels: %+v\n", labels)
+		if !ok {
+			obj.Object["metadata"].(map[interface{}]interface{})["labels"] = map[interface{}]interface{}{}
+		}
+		obj.Object["metadata"].(map[interface{}]interface{})["labels"].(map[interface{}]interface{})["generatedBy"] = "copilot-operator"
+
+		// set GVR
+		gvr := schema.GroupVersionResource{
+			Group:    obj.GroupVersionKind().Group,
+			Version:  obj.GroupVersionKind().Version,
+			Resource: obj.GroupVersionKind().Kind,
+		}
+		// decUnstructured := k8syaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+		// testMachineConfigPools := &unstructured.Unstructured{}
+
+		// _, _, err := decUnstructured.Decode([]byte(machineconfigpoolYAML), nil, testMachineConfigPools)
+
+		obj, err := dc.Resource(gvr).Create(ctx, obj, v1.CreateOptions{})
+		if err != nil {
+			fmt.Printf("error creating object: %v\n", err)
+			continue
+		} else {
+			fmt.Printf("created object: %v\n", obj)
+		}
+
+		// fmt.Printf("resourceId: %+v\n", resourceId)
+	}
+
+	return nil
+}
+
+func getApiGroupAndVersion(apiVersionStr string) (string, string) {
+	// split apiversion into group and version
+	var apiVersion, apiGroup string
+
+	apiVersionSplit := strings.Split(apiVersionStr, "/")
+	if len(apiVersionSplit) != 2 {
+		fmt.Printf("apiVersion %s is not in the format group/version, this must be a core object", apiVersionStr)
+		apiGroup = ""
+		apiVersion = apiVersionSplit[0]
+	} else {
+		apiGroup = apiVersionSplit[0]
+		apiVersion = apiVersionSplit[1]
+	}
+	return apiGroup, apiVersion
 }

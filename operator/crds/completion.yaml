@@ -3,4 +3,4 @@ kind: Completion
 metadata:
   name: completion-example
 spec:
-  userPrompt: "# Below is a Kubernetes deployment for a Nodejs server which uses a PostgreSQL database hosted on a 20Gi PVC\nkind: Deployment\napiVersion:"
+  userPrompt: "deployment for a Nodejs server which uses a PostgreSQL database hosted on a 20Gi PVC"

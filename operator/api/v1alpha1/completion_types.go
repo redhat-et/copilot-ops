@@ -32,17 +32,24 @@ type CompletionSpec struct {
 	UserPrompt string `json:"userPrompt"`
 	//+kubebuilder:validation:Minimum=0
 	//+kubebuilder:validation:Maximum=4096
+	//+kubebuilder:default:=256
+	//+kubebuilder:validation:Optional
 	MaxTokens int `json:"maxTokens"`
-	// Temperature float64 `json:"temperature"`
-	// TopP        float64 `json:"topP"`
+	// Wehether to apply the generated YAMLs automatically or not
+	//+kubebuilder:default:=false
+	//+kubebuilder:validation:Optional
+	AutoApply bool `json:"autoApply"`
 }
 
 // CompletionStatus defines the observed state of Completion
 type CompletionStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Completion         string `json:"completion"`
-	ObservedGeneration int64  `json:"observedGeneration,omitempty"`
+	Completions        []string `json:"completion"`
+	ObservedGeneration int64    `json:"observedGeneration,omitempty"`
+	// a list of the resources which were applied and are currently in the cluster
+	// format in the type of namespace/resource.group/name
+	ResourceList string `json:"resourceList"`
 }
 
 //+kubebuilder:object:root=true
