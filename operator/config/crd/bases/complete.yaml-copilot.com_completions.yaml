@@ -36,7 +36,13 @@ spec:
           spec:
             description: CompletionSpec defines the desired state of Completion
             properties:
+              autoApply:
+                default: false
+                description: Wehether to apply the generated YAMLs automatically or
+                  not
+                type: boolean
               maxTokens:
+                default: 256
                 maximum: 4096
                 minimum: 0
                 type: integer
@@ -45,7 +51,6 @@ spec:
                   to remove/update
                 type: string
             required:
-            - maxTokens
             - userPrompt
             type: object
           status:
@@ -55,12 +60,19 @@ spec:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
-                type: string
+                items:
+                  type: string
+                type: array
               observedGeneration:
                 format: int64
                 type: integer
+              resourceList:
+                description: a list of the resources which were applied and are currently
+                  in the cluster format in the type of namespace/resource.group/name
+                type: string
             required:
             - completion
+            - resourceList
             type: object
         type: object
     served: true
