@@ -1,0 +1,17 @@
+{
+  "name": "data-lab",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@urql/core": "^2.3.6",
+    "axios": "^0.25.0",
+    "graphql": "^16.2.0",
+    "isomorphic-unfetch": "^3.1.0",
+    "urql": "^2.0.6"
+  },
+	"scripts": {
+		"start": "ijs"
+	},
+  "type": "module"
+}
