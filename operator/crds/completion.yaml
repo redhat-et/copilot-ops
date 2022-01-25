@@ -1,6 +1,0 @@
-apiVersion: complete.yaml-copilot.com/v1alpha1
-kind: Completion
-metadata:
-  name: completion-example
-spec:
-  userPrompt: "deployment for a Nodejs server which uses a PostgreSQL database hosted on a 20Gi PVC"
