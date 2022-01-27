@@ -1,0 +1,47 @@
+# Listed below are:
+# 1. Explanation of how two files need to be changed
+# 2. The original files
+# 3. An updated version of the files with the described changes
+# 4. A '---' string, indicating the end of this document
+
+## Description of issues:
+@file1:/var/lib/dokuwiki.yaml
+@file2:/var/lib/dokuwiki-pvc.yaml
+
+The amount of CPU in @file1 needs to be increased to 512M
+The PVC storage amount in @file2 should be decreased to 10Gi
+
+## Original files:
+# /var/lib/dokuwiki.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dokuwiki
+  labels:
+    name: dokuwiki
+spec:
+  containers:
+  - name: dokuwiki
+    image: <Image>
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
+    ports:
+      - containerPort: 5132
+
+# /var/lib/dokuwiki-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dokuwik-pvc
+spec:
+  resources:
+    requests:
+      storage: 50Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+
+## Updated files:
+# /var/lib/dokuwiki.yaml
