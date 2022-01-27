@@ -1,0 +1,23 @@
+# grab first 100 issues in operate first repo
+query GetIssues ($owner: String!, $repo: String!, $limit: Int, $labels: [String]) {
+  repository(owner: $owner, name: $repo) {
+    issues(first: $limit, labels: $labels) {
+      totalCount
+      pageInfo {	
+        startCursor
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          number
+          body
+          title
+          author {
+            login
+          }
+        }
+      }
+    }
+  }
+}
