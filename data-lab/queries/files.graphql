@@ -1,0 +1,24 @@
+query {	
+  repository(owner: "operate-first", name:"apps") {
+    readme: object(expression: "master:README.md") {
+      ...contents
+    }
+    kustomization: object(expression: "master:cluster-scope/overlays/prod/moc/smaug/kustomization.yaml") {
+      ...contents
+    }
+  }
+  ...rateLimitInfo
+}	
+
+fragment contents on Blob {
+  text
+}
+
+fragment rateLimitInfo on Query {
+  rateLimit {
+  	limit
+  	cost
+  	remaining
+  	resetAt
+  }
+}
