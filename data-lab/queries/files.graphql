@@ -1,5 +1,5 @@
-query {	
-  repository(owner: "operate-first", name:"apps") {
+query GetFiles($Owner: String!, $Repo: String!) {	
+  repository(owner: $Owner, name:$Repo) {
     readme: object(expression: "master:README.md") {
       ...contents
     }
