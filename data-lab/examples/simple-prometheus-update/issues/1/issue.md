@@ -1,5 +1,6 @@
 `@file1:grafana/base/datasource.yaml`
 `@file2:grafana/base/grafana-route.yaml`
 
-The amount of CPU in @file1 needs to be increased to 512M
-The PVC storage amount in @file2 should be decreased to 10Gi
+@file1 and @file2 must specify the `grafana-datasource` namespace.
+@file1 needs to increase the 'Prometheus' data source to a time interval of 20s.
+Disable tls-acme for @file2.
