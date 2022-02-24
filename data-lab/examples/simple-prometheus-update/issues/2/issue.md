@@ -1,1 +1,3 @@
-The GrafanaDataSource in @file1 needs an extra datasources added to the list which points to the url: `https://not-a-real-address.com`
+`@file1:grafana/base/datasource.yaml`
+
+@file1 needs to change .metadata.name to 'grafana-datasource-temporary'
