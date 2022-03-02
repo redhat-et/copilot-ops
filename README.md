@@ -21,7 +21,7 @@ The `suggest` command is the most basic functionality which works like this:
 
 ```console
 > copilot-ops suggest "set mysql memory to 42 Gi only for production env"
-Collecting 2 files ......... OK
+Collecting 2 files ........ OK
 Using the force ........... OK
 Applying 2 changes ........ OK
 Done ...................... use `git diff/add/commit/etc`
@@ -34,7 +34,7 @@ Same as `suggest` but also interacts with the source issue and create a target P
 ```console
 > copilot-ops suggest-pr --issue=123
 Reading issue #123 ........ OK
-Collecting 2 files ......... OK
+Collecting 2 files ........ OK
 Using the force ........... OK
 Applying 2 changes ........ OK
 Creating the PR ........... OK
@@ -48,7 +48,7 @@ Similar to `suggest-pr` but as a followup to a new user comment on a PR that con
 ```console
 > copilot-ops update-pr --pr=456 --comment=789
 Reading PR #456 ........... OK
-Collecting 2 files ......... OK
+Collecting 2 files ........ OK
 Using the force ........... OK
 Applying 2 changes ........ OK
 Updating the PR ........... OK
