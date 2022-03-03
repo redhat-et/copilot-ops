@@ -3,3 +3,5 @@ node_modules
 data-lab/examples/*/issues/*/completions
 data-lab/examples/*/issues/*/completion.md
 data-lab/examples/*/issues/*/prompt.md
+**/generated-files/**
+last-processed.json
