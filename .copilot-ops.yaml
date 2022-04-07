@@ -1,0 +1,9 @@
+# this is an example for how filesets can be defined in a repo config file
+# so that they can be referenced in issue labels or manually in by the user.
+filesets:
+  - name: syncthing
+    files:
+      - /deploy/syncthing/*.yaml
+  - name: rclone
+    files:
+      - /deploy/rclone/*.yaml
