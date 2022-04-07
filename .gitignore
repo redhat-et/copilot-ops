@@ -5,3 +5,6 @@ data-lab/examples/*/issues/*/completion.md
 data-lab/examples/*/issues/*/prompt.md
 **/generated-files/**
 last-processed.json
+
+# build artifacts
+/copilot-ops
