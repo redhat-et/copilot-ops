@@ -1,3 +1,5 @@
+// cmd contains the commands implementation of the CLI tool
+// The main entry point function is cmd.Execute()
 package cmd
 
 import (
@@ -6,15 +8,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Execute the CLI
+// Execute the CLI and exit
 func Execute() {
 	err := RootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
+	} else {
+		os.Exit(0)
 	}
 }
 
-// RootCmd is the root command of the CLI
+// RootCmd is the bare `copilot-ops` CLI command which shows the available subcommands
 var RootCmd = &cobra.Command{
 	Use: "copilot-ops",
 
@@ -24,4 +28,13 @@ var RootCmd = &cobra.Command{
 `,
 
 	Example: `  copilot-ops patch --help`,
+
+	// Usage on every error is too noisy and makes it harder
+	// to read the error message, so disabling it
+	SilenceUsage: true,
+}
+
+func init() {
+	// Add subcommands of the root command
+	RootCmd.AddCommand(PatchCmd)
 }
