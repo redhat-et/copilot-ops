@@ -1,21 +1,15 @@
 // Package openai defines functions for interacting with OpenAI's endpoints
 package openai
 
-import (
-	fm "github.com/redhat-et/copilot-ops/pkg/filemap"
-)
-
 const (
 	EditEndpoint string = "https://api.openai.com/v1/engines/code-davinci-002/edits"
 )
 
-// GetFileEditsFromOpenAI Accepts a Filemap and an instruction string to edit the provided files
-// using a response obtained from OpenAI.
-func GetFileEditsFromOpenAI(fileMap fm.Filemap, instruction string) (EditReply, error) {
-	return EditReply{}, nil
-}
+// EditCode accepts an input and an instruction string and returns an
+// output string edited by the AI engine.
+func EditCode(input string, instruction string) (string, error) {
 
-// ResponseToFilemap Parses OpenAI's response to populate the Filemap
-func ResponseToFilemap(response EditReply) (fm.Filemap, error) {
-	return fm.Filemap{}, nil
+	// TODO for now - return the input unedited
+	return input, nil
+
 }
