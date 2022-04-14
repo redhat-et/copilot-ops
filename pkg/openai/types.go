@@ -23,6 +23,10 @@ type EditRequestBody struct {
 
 // OpenAIClient Defines the client for interacting with the OpenAI API
 type OpenAIClient struct {
+	// Client is the HTTP client used to perform requests to the OpenAI API.
 	Client *http.Client
+	// APIUrl Defines the endpoint that the client will use to interact with the OpenAI API.
 	APIUrl string
+	// Engine represents the engine used when getting completions from OpenAI.
+	Engine string
 }
