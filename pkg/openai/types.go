@@ -28,5 +28,6 @@ type OpenAIClient struct {
 	// APIUrl Defines the endpoint that the client will use to interact with the OpenAI API.
 	APIUrl string
 	// Engine represents the engine used when getting completions from OpenAI.
+	// TODO: Create a constant enumeration of engines so that we can include their character limits.
 	Engine string
 }
