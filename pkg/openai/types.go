@@ -30,4 +30,18 @@ type OpenAIClient struct {
 	// Engine represents the engine used when getting completions from OpenAI.
 	// TODO: Create a constant enumeration of engines so that we can include their character limits.
 	Engine string
+	// AuthToken is the token used to authenticate with the OpenAI API.
+	AuthToken string
+	// OrganizationID is the ID of the organization used to authenticate with the OpenAI API.
+	OrganizationID string
+}
+
+// ErrorResponse Defines an Error object which will be returned by OpenAI when an error occurs.
+type ErrorResponse struct {
+	Error *struct {
+		Code    *int    `json:"code,omitempty"`
+		Message string  `json:"message"`
+		Type    *string `json:"type,omitempty"`
+		Param   string  `json:"param"`
+	} `json:"error,omitempty"`
 }

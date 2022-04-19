@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	EditEndpoint       string = "edits"
-	CompletionEndpoint string = "completions"
-	OpenAIEndpointV1   string = "https://api.openai.com/v1"
-	OpenAICodeDavinci2 string = "code-davinci-002"
+	EditEndpoint            string = "edits"
+	CompletionEndpoint      string = "completions"
+	OpenAIEndpointV1        string = "https://api.openai.com/v1"
+	OpenAICodeDavinciEditV1 string = "code-davinci-edit-001"
 )
 
 // GetFirstChoice Returns the string contents of the first choice returned by the AI engine.
