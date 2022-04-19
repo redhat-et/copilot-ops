@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+  pull_request:
+    branches:
+      - "*"
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "data-lab/**"
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - run: go build -v ./...
+      - run: go test -v ./...
+      - run: go vet -v ./...
+
+  build-all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - run: go build -o copilot-ops-linux-amd64
+        env:
+          GOOS: linux
+          GOARCH: amd64
+      - run: go build -o copilot-ops-linux-arm64
+        env:
+          GOOS: linux
+          GOARCH: arm64
+      - run: go build -o copilot-ops-darwin-amd64
+        env:
+          GOOS: darwin
+          GOARCH: amd64
+      - run: go build -o copilot-ops-darwin-arm64
+        env:
+          GOOS: darwin
+          GOARCH: arm64
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: copilot-ops-linux-amd64
+          path: copilot-ops-linux-amd64
+      - uses: actions/upload-artifact@v3
+        with:
+          name: copilot-ops-linux-arm64
+          path: copilot-ops-linux-arm64
+      - uses: actions/upload-artifact@v3
+        with:
+          name: copilot-ops-darwin-amd64
+          path: copilot-ops-darwin-amd64
+      - uses: actions/upload-artifact@v3
+        with:
+          name: copilot-ops-darwin-arm64
+          path: copilot-ops-darwin-arm64
