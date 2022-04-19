@@ -118,12 +118,13 @@ func RunPatch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ai, err := openai.CreateOpenAIClient()
-	if err != nil {
-		return err
-	}
-
-	output, err := ai.EditCode(input, request)
+	// create OpenAI client
+	// TODO: get these values from a config, potentially global
+	openAIClient := openai.CreateOpenAIClient(
+		os.Getenv("OPENAI_API_KEY"),
+		os.Getenv("OPENAI_ORG_ID"),
+	)
+	output, err := openAIClient.EditCode(input, request)
 	if err != nil {
 		return err
 	}
