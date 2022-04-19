@@ -107,7 +107,7 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 	var i int = 0
 	// join the files together along with their tag
 	for tagname, file := range fm.Files {
-		input += fmt.Sprintf("# %s\n%s\n", tagname, file.Content)
+		input += fmt.Sprintf("# @%s\n%s\n", tagname, file.Content)
 		// insert a '---' between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
 			input += "---\n"
