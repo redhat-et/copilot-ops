@@ -7,19 +7,21 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 )
 
-// CreateOpenAIClient Creates a client to perform requests to OpenAI.
-func CreateOpenAIClient() (*OpenAIClient, error) {
+// CreateOpenAIClient Creates a client to perform requests to OpenAI based on the provided
+// API token and organization ID.
+func CreateOpenAIClient(authToken string, organizationID string) *OpenAIClient {
 	return &OpenAIClient{
 		Client: &http.Client{
 			Timeout: time.Minute,
 		},
-		APIUrl: OpenAIEndpointV1,
-		Engine: OpenAICodeDavinci2,
-	}, nil
+		APIUrl:         OpenAIEndpointV1,
+		Engine:         OpenAICodeDavinciEditV1,
+		AuthToken:      authToken,
+		OrganizationID: organizationID,
+	}
 }
 
 // GetAPIUrl Creates a URL for the OpenAI API.
@@ -29,12 +31,17 @@ func (openAI OpenAIClient) EnginePath() string {
 
 // APIHeaders Returns a map of headers to be used when making requests to the OpenAI API.
 func (openAI *OpenAIClient) APIHeaders() map[string]string {
-	return map[string]string{
-		"Authorization": "Bearer " + os.Getenv("OPENAI_API_KEY"),
-		"Content-Type":  "application/json",
-		"Accept":        "application/json",
-		"User-Agent":    "copilot-ops-cli",
+	headers := make(map[string]string)
+	headers["Content-Type"] = "application/json"
+	headers["Accept"] = "application/json"
+	headers["Authorization"] = "Bearer " + openAI.AuthToken
+	headers["User-Agent"] = "copilot-ops-cli"
+
+	// set the Org ID if provided
+	if openAI.OrganizationID != "" {
+		headers["OpenAI-Organization"] = openAI.OrganizationID
 	}
+	return headers
 }
 
 // MakeRequest Makes a request to the OpenAI API, suffixed with the given endpoint with the provided
@@ -71,7 +78,13 @@ func (openAI *OpenAIClient) MakeRequest(endpoint string, body interface{}) ([]by
 
 	// check response status
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		// marshal the JSON Error response back into a struct
+		var errRes ErrorResponse
+		err = json.NewDecoder(resp.Body).Decode(&errRes)
+		if err != nil || errRes.Error == nil {
+			return nil, fmt.Errorf("error, response status code: %d", resp.StatusCode)
+		}
+		return nil, fmt.Errorf("error, status code: %d, message: %s", resp.StatusCode, errRes.Error.Message)
 	}
 
 	return ioutil.ReadAll(resp.Body)
@@ -105,6 +118,5 @@ func (openAI *OpenAIClient) EditCode(input string, instruction string) (string, 
 		return "", err
 	}
 
-	// TODO for now - return the input unedited
 	return response, nil
 }
