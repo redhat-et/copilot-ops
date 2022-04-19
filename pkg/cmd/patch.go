@@ -118,7 +118,12 @@ func RunPatch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := openai.EditCode(input, request)
+	ai, err := openai.CreateOpenAIClient()
+	if err != nil {
+		return err
+	}
+
+	output, err := ai.EditCode(input, request)
 	if err != nil {
 		return err
 	}
