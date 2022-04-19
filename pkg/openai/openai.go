@@ -31,11 +31,12 @@ func (openAI OpenAIClient) EnginePath() string {
 
 // APIHeaders Returns a map of headers to be used when making requests to the OpenAI API.
 func (openAI *OpenAIClient) APIHeaders() map[string]string {
-	headers := make(map[string]string)
-	headers["Content-Type"] = "application/json"
-	headers["Accept"] = "application/json"
-	headers["Authorization"] = "Bearer " + openAI.AuthToken
-	headers["User-Agent"] = "copilot-ops-cli"
+	headers := map[string]string{
+		"Content-Type":  "application/json",
+		"Accept":        "application/json",
+		"User-Agent":    "copilot-ops-cli",
+		"Authorization": fmt.Sprintf("Bearer %s", openAI.AuthToken),
+	}
 
 	// set the Org ID if provided
 	if openAI.OrganizationID != "" {
