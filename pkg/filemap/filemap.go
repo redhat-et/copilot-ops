@@ -12,9 +12,12 @@ import (
 
 // File represents a file which was referenced in the issue to be updated.
 type File struct {
-	Path    string `json:"path"`
+	// Path is the path to the file.
+	Path string `json:"path"`
+	// Content is the content of the file.
 	Content string `json:"content"`
-	Tag     string `json:"tag"`
+	// Tag is the tagname of the file.
+	Tag string `json:"tag"`
 }
 
 // Filemap represents a mapping of files in a directory by their tagnames.
@@ -108,6 +111,22 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 	// join the files together along with their tag
 	for tagname, file := range fm.Files {
 		input += fmt.Sprintf("# @%s\n%s\n", tagname, file.Content)
+		// insert a '---' between each file, but not after the last file
+		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
+			input += "---\n"
+		}
+		i++
+	}
+	return input, nil
+}
+
+// EncodeToInputTextFullPaths Encodes the filemap into a string using each file's full path as its tagname.
+func (fm *Filemap) EncodeToInputTextFullPaths() (string, error) {
+	var input string = ""
+	var i int = 0
+	// join the files together along with their tag
+	for _, file := range fm.Files {
+		input += fmt.Sprintf("# @%s\n%s\n", file.Path, file.Content)
 		// insert a '---' between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
 			input += "---\n"
