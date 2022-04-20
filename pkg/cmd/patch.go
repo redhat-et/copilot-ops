@@ -129,21 +129,28 @@ func RunPatch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmOut := filemap.NewFilemap()
-	err = fmOut.DecodeFromOutput(output)
+	err = fm.DecodeFromOutput(output)
 	if err != nil {
 		return err
 	}
 
-	fmOut.LogDump()
+	fm.LogDump()
 
 	if write {
 		log.Printf("updating files ...\n")
-		err = fmOut.WriteUpdatesToFiles()
+		err = fm.WriteUpdatesToFiles()
 		if err != nil {
 			return err
 		}
 	} else {
+		// TODO: Add output formatting control
+		// just encode the output and print it to stdout
+		// TODO: print as redirectable / pipeable write stream
+		fmOutput, err := fm.EncodeToInputTextFullPaths()
+		if err != nil {
+			return err
+		}
+		log.Printf("\n%s\n", fmOutput)
 		log.Printf("use --write to actually update files\n")
 	}
 

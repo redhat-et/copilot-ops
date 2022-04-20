@@ -4,8 +4,16 @@ This directory contains a collection of example files which can be used in tande
 with the copilot-ops tool.
 Feel free to play around with these files and see how `copilot-ops` responds.
 
-Some examples you could run:
+### stock-data.yaml 
+
 
 ```sh
-go run main.go patch -f robinhood.yaml --request "@robinhood.yaml needs an additional field to hold 50000 units of AMC stock"
+# to change values within .data
+go run main.go patch -f stock-data.yaml --request "@stock-data.yaml needs an additional field to hold 50000 units of AMC stock"
+
+# to rename the configmap
+go run main.go patch -f stock-data.yaml --request "rename the configmap to 'stock-holdings'"
+
+# to erase existing fields
+go run main.go patch -f examples/stock-data.yaml --request "remove the existing data fields in @stock-data.yaml"
 ```
