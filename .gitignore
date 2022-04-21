@@ -8,3 +8,6 @@ last-processed.json
 
 # build artifacts
 /copilot-ops
+
+# local env
+.copilot-ops.local.yaml

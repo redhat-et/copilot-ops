@@ -8,47 +8,49 @@ import (
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
-// PatchCmd is the `copilot-ops patch` CLI command
-var PatchCmd = &cobra.Command{
-	Use: "patch",
+// NewPatchCmd creates the `copilot-ops patch` CLI command
+func NewPatchCmd() *cobra.Command {
 
-	Short: "Proposes a patch to the repo",
+	cmd := &cobra.Command{
+		Use: "patch",
 
-	Long: "Patch takes a request in natural language, packs the related files from the repo, calls AI engine to suggest code changes based on the request, and finally applies the suggested changes to the repo.",
+		Short: "Proposes a patch to the repo",
 
-	Example: `  copilot-ops patch --request 'Add a new secret containing a pre-generated self signed SSL certificate, mount that secret from the syncthing deployment and also the volsync operator deployment, set syncthing configuration to serve with HTTPS using the mounted secret, and add a new go file with a code example that trusts a mounted certificate for the volsync operator pod' --fileset syncthing`,
+		Long: "Patch takes a request in natural language, packs the related files from the repo, calls AI engine to suggest code changes based on the request, and finally applies the suggested changes to the repo.",
 
-	RunE: RunPatch,
-}
+		Example: `  copilot-ops patch --request 'Add a new secret containing a pre-generated self signed SSL certificate, mount that secret from the syncthing deployment and also the volsync operator deployment, set syncthing configuration to serve with HTTPS using the mounted secret, and add a new go file with a code example that trusts a mounted certificate for the volsync operator pod' --fileset syncthing`,
 
-func init() {
-	PatchCmd.Flags().StringP(
+		RunE: RunPatch,
+	}
+
+	cmd.Flags().StringP(
 		FLAG_REQUEST, "r", "",
 		"Requested changes in natural language (empty request will surprise you!)",
 	)
 
-	PatchCmd.Flags().BoolP(
+	cmd.Flags().BoolP(
 		FLAG_WRITE, "w", false,
 		"Write changes to the repo files (if not set the patch is printed to stdout)",
 	)
 
-	PatchCmd.Flags().StringP(
+	cmd.Flags().StringP(
 		FLAG_PATH, "p", ".",
 		"Path to the root of the repo",
 	)
 
-	PatchCmd.Flags().StringArrayP(
+	cmd.Flags().StringArrayP(
 		FLAG_FILES, "f", []string{},
 		"File paths (glob) to be considered for the patch (can be specified multiple times)",
 	)
 
-	PatchCmd.Flags().StringArrayP(
+	cmd.Flags().StringArrayP(
 		FLAG_FILESETS, "s", []string{},
 		"Fileset names (defined in "+CONFIG_FILE+") to be considered for the patch (can be specified multiple times)",
 	)
+
+	return cmd
 }
 
 const FLAG_REQUEST = "request"
@@ -84,12 +86,14 @@ func RunPatch(cmd *cobra.Command, args []string) error {
 	// Load the config from file if it exists, but if it doesn't exist
 	// we'll just use the defaults and continue without error.
 	// Errors here might return if the file exists but is invalid.
-	config := Config{}
-	err := config.LoadFile(CONFIG_FILE)
+	conf := Config{}
+	err := conf.Load()
 	if err != nil {
 		return err
 	}
-	log.Printf("config: %+v\n", config)
+
+	// TODO this prints sensitive keys - can we redact it from the printed output?
+	log.Printf("conf: %+v\n", conf)
 
 	fm := filemap.NewFilemap()
 
@@ -101,7 +105,7 @@ func RunPatch(cmd *cobra.Command, args []string) error {
 
 	if len(filesets) > 0 {
 		for _, name := range filesets {
-			fileset := config.GetFileset(name)
+			fileset := conf.FindFileset(name)
 			if fileset == nil {
 				return fmt.Errorf("fileset %s not found in %s", name, CONFIG_FILE)
 			}
@@ -120,10 +124,7 @@ func RunPatch(cmd *cobra.Command, args []string) error {
 
 	// create OpenAI client
 	// TODO: get these values from a config, potentially global
-	openAIClient := openai.CreateOpenAIClient(
-		os.Getenv("OPENAI_API_KEY"),
-		os.Getenv("OPENAI_ORG_ID"),
-	)
+	openAIClient := openai.CreateOpenAIClient(conf.OpenAI.ApiKey, conf.OpenAI.OrgId)
 	output, err := openAIClient.EditCode(input, request)
 	if err != nil {
 		return err
@@ -154,30 +155,5 @@ func RunPatch(cmd *cobra.Command, args []string) error {
 		log.Printf("use --write to actually update files\n")
 	}
 
-	return nil
-}
-
-const CONFIG_FILE = ".copilot-ops.yaml"
-
-type Config struct {
-	Filesets []ConfigFilesets
-}
-
-type ConfigFilesets struct {
-	Name  string
-	Files []string
-}
-
-func (c *Config) LoadFile(path string) error {
-	text, _ := os.ReadFile(path)
-	return yaml.Unmarshal(text, c)
-}
-
-func (c *Config) GetFileset(name string) *ConfigFilesets {
-	for _, fileset := range c.Filesets {
-		if fileset.Name == name {
-			return &fileset
-		}
-	}
 	return nil
 }
