@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
-	"os"
 
-	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
 	"github.com/spf13/cobra"
 )
@@ -18,142 +15,37 @@ func NewPatchCmd() *cobra.Command {
 
 		Short: "Proposes a patch to the repo",
 
-		Long: "Patch takes a request in natural language, packs the related files from the repo, calls AI engine to suggest code changes based on the request, and finally applies the suggested changes to the repo.",
+		Long: "Patch takes a request in natural language, packs the related files from the repo, calls AI engine to suggest code changes based on the request, and optionally applies the suggested changes to the repo.",
 
 		Example: `  copilot-ops patch --request 'Add a new secret containing a pre-generated self signed SSL certificate, mount that secret from the syncthing deployment and also the volsync operator deployment, set syncthing configuration to serve with HTTPS using the mounted secret, and add a new go file with a code example that trusts a mounted certificate for the volsync operator pod' --fileset syncthing`,
 
 		RunE: RunPatch,
 	}
 
-	cmd.Flags().StringP(
-		FLAG_REQUEST, "r", "",
-		"Requested changes in natural language (empty request will surprise you!)",
-	)
-
-	cmd.Flags().BoolP(
-		FLAG_WRITE, "w", false,
-		"Write changes to the repo files (if not set the patch is printed to stdout)",
-	)
-
-	cmd.Flags().StringP(
-		FLAG_PATH, "p", ".",
-		"Path to the root of the repo",
-	)
-
-	cmd.Flags().StringArrayP(
-		FLAG_FILES, "f", []string{},
-		"File paths (glob) to be considered for the patch (can be specified multiple times)",
-	)
-
-	cmd.Flags().StringArrayP(
-		FLAG_FILESETS, "s", []string{},
-		"Fileset names (defined in "+CONFIG_FILE+") to be considered for the patch (can be specified multiple times)",
-	)
+	AddRequestFlags(cmd)
 
 	return cmd
 }
 
-const FLAG_REQUEST = "request"
-const FLAG_WRITE = "write"
-const FLAG_PATH = "path"
-const FLAG_FILES = "file"
-const FLAG_FILESETS = "fileset"
-
 // RunPatch is the implementation of the `copilot-ops patch` command
 func RunPatch(cmd *cobra.Command, args []string) error {
 
-	request, _ := cmd.Flags().GetString(FLAG_REQUEST)
-	write, _ := cmd.Flags().GetBool(FLAG_WRITE)
-	path, _ := cmd.Flags().GetString(FLAG_PATH)
-	files, _ := cmd.Flags().GetStringArray(FLAG_FILES)
-	filesets, _ := cmd.Flags().GetStringArray(FLAG_FILESETS)
-
-	log.Printf("flags:\n")
-	log.Printf(" - %-8s: %v\n", FLAG_REQUEST, request)
-	log.Printf(" - %-8s: %v\n", FLAG_WRITE, write)
-	log.Printf(" - %-8s: %v\n", FLAG_PATH, path)
-	log.Printf(" - %-8s: %v\n", FLAG_FILES, files)
-	log.Printf(" - %-8s: %v\n", FLAG_FILESETS, filesets)
-
-	// Handle --path by changing the working directory
-	// so that every file name we refer to is relative to path
-	if path != "" {
-		if err := os.Chdir(path); err != nil {
-			return err
-		}
-	}
-
-	// Load the config from file if it exists, but if it doesn't exist
-	// we'll just use the defaults and continue without error.
-	// Errors here might return if the file exists but is invalid.
-	conf := Config{}
-	err := conf.Load()
+	r, err := PrepareRequest(cmd, openai.OpenAICodeDavinciEditV1)
 	if err != nil {
 		return err
 	}
 
-	// TODO this prints sensitive keys - can we redact it from the printed output?
-	log.Printf("conf: %+v\n", conf)
-
-	fm := filemap.NewFilemap()
-
-	if len(files) > 0 {
-		for _, glob := range files {
-			fm.LoadFilesFromGlob(glob)
-		}
-	}
-
-	if len(filesets) > 0 {
-		for _, name := range filesets {
-			fileset := conf.FindFileset(name)
-			if fileset == nil {
-				return fmt.Errorf("fileset %s not found in %s", name, CONFIG_FILE)
-			}
-			for _, glob := range fileset.Files {
-				fm.LoadFilesFromGlob(glob)
-			}
-		}
-	}
-
-	fm.LogDump()
-
-	input, err := fm.EncodeToInputText()
+	output, err := r.OpenAI.EditCode(r.FilemapText, r.UserRequest)
 	if err != nil {
 		return err
 	}
 
-	// create OpenAI client
-	// TODO: get these values from a config, potentially global
-	openAIClient := openai.CreateOpenAIClient(conf.OpenAI.ApiKey, conf.OpenAI.OrgId)
-	output, err := openAIClient.EditCode(input, request)
+	log.Printf("received patch from OpenAI: %q\n", output)
+
+	err = r.Filemap.DecodeFromOutput(output)
 	if err != nil {
 		return err
 	}
 
-	err = fm.DecodeFromOutput(output)
-	if err != nil {
-		return err
-	}
-
-	fm.LogDump()
-
-	if write {
-		log.Printf("updating files ...\n")
-		err = fm.WriteUpdatesToFiles()
-		if err != nil {
-			return err
-		}
-	} else {
-		// TODO: Add output formatting control
-		// just encode the output and print it to stdout
-		// TODO: print as redirectable / pipeable write stream
-		fmOutput, err := fm.EncodeToInputTextFullPaths()
-		if err != nil {
-			return err
-		}
-		log.Printf("\n%s\n", fmOutput)
-		log.Printf("use --write to actually update files\n")
-	}
-
-	return nil
+	return PrintOrWriteOut(r)
 }
