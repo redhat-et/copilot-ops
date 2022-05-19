@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+const (
+	// FileDelimeter Is the string used to separate files when encoding/decoding.
+	FileDelimeter = "==="
+)
+
 // File represents a file which was referenced in the issue to be updated.
 type File struct {
 	// Path is the path to the file.
@@ -93,13 +98,13 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 			metadata:
 				name: file1
 				namespace: default
-			---
+			{FileDelimeter}
 			# file2.yaml
 			kind: ConfigMap
 			metadata:
 				name: file2
 				namespace: default
-			---
+			{FileDelimeter}
 			# file3.yaml
 			kind: Pod
 			metadata:
@@ -111,9 +116,9 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 	// join the files together along with their tag
 	for tagname, file := range fm.Files {
 		input += fmt.Sprintf("# @%s\n%s\n", tagname, file.Content)
-		// insert a '---' between each file, but not after the last file
+		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
-			input += "---\n"
+			input += fmt.Sprintf("%s\n", FileDelimeter)
 		}
 		i++
 	}
@@ -127,9 +132,9 @@ func (fm *Filemap) EncodeToInputTextFullPaths() (string, error) {
 	// join the files together along with their tag
 	for _, file := range fm.Files {
 		input += fmt.Sprintf("# @%s\n%s\n", file.Path, file.Content)
-		// insert a '---' between each file, but not after the last file
+		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
-			input += "---\n"
+			input += fmt.Sprintf("%s\n", FileDelimeter)
 		}
 		i++
 	}
@@ -141,15 +146,20 @@ func ExtractTagName(content string) (string, int32, error) {
 	// The tagname would be on a line in the format of: "# @tagname\n"
 	// We can split the line by the '#' character and then trim the leading and trailing whitespace.
 	lines := strings.Split(content, "\n")
+	fmt.Printf("=== processing string: === \n%s\n", content)
 
 	// search content for regex of the following pattern: /#\s*\@(.+)/g
 	// if found, return the tagname
 	// if not found, return an error
 	pattern := `#\s*\@(.+)`
+	regexPattern, err := regexp.Compile(pattern)
+	if err != nil {
+		return "", 0, err
+	}
 
 	for i, line := range lines {
 		// find the first line that matches the pattern
-		if match := regexp.MustCompile(pattern).FindStringSubmatch(line); match != nil {
+		if match := regexPattern.FindStringSubmatch(line); match != nil {
 			return strings.TrimSpace(match[1]), int32(i), nil
 		}
 	}
@@ -192,17 +202,19 @@ func (fm *Filemap) AddContentByTag(tagname string, content string) {
 // DecodeFromOutput Decodes the given content and updates the filemap with the decoded content.
 // If new files exist within the content, a best-guess effort will be made to determine the name and pathing.
 func (fm *Filemap) DecodeFromOutput(content string) error {
-	// To decode from the output, we have to split the content up by the '---' separator.
+	// To decode from the output, we have to split the content up by the defined file delimeter.
 	// Then we use RegEx to extract the tagname which we can use to look up the file and update its content.
 	// If the tagname is not found, we assume that the file is new and we will create a new file with the tagname.
 
-	// Split the content by the '---' separator
-	parts := strings.Split(content, "---")
+	// Split the content by the file delimeter
+	parts := strings.Split(content, FileDelimeter)
+	fmt.Printf("num parts: %d\n", len(parts))
 	for _, part := range parts {
 		// Trim the leading and trailing whitespace
 		part = strings.TrimSpace(part)
 		// If the part is empty, skip it
 		if part == "" {
+			fmt.Printf("part is empty, skipping\n")
 			continue
 		}
 		// The tagName should be the first line
