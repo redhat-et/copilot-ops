@@ -4,3 +4,6 @@ filesets:
   - name: examples
     files:
       - examples/*.yaml
+  - name: cluster-scope-overlays
+    files:
+    - examples/humair-stale_dev_overlay/*.yaml
