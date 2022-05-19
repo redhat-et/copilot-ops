@@ -37,6 +37,8 @@ func NewRootCmd() *cobra.Command {
 
 	// Add subcommands of the root command
 	cmd.AddCommand(NewPatchCmd())
+	cmd.AddCommand(NewGenerateCmd())
+	// cmd.AddCommand(NewEditCmd())
 
 	return cmd
 }

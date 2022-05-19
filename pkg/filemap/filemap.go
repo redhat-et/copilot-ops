@@ -146,7 +146,6 @@ func ExtractTagName(content string) (string, int32, error) {
 	// The tagname would be on a line in the format of: "# @tagname\n"
 	// We can split the line by the '#' character and then trim the leading and trailing whitespace.
 	lines := strings.Split(content, "\n")
-	fmt.Printf("=== processing string: === \n%s\n", content)
 
 	// search content for regex of the following pattern: /#\s*\@(.+)/g
 	// if found, return the tagname
