@@ -55,7 +55,7 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	// err = r.Filemap.DecodeFromOutput(output)
 	r.Filemap = filemap.NewFilemap()
 	log.Printf("decoding output")
-	r.Filemap.DecodeFromOutput(output)
+	err = r.Filemap.DecodeFromOutput(output)
 	if err == nil {
 		return PrintOrWriteOut(r)
 	}
