@@ -59,9 +59,10 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	if err == nil {
 		return PrintOrWriteOut(r)
 	}
-	// TODO try other way to decode the output to a fileset
+	// HACK: try other way to decode the output to a fileset
 	log.Printf("decoding failed, got error: %s", err)
 	log.Printf("trying fallback")
+
 	// fallback - generate a new filename and put the content inside
 	newFileName := "generated-by-copilot-ops"
 	r.Filemap.Files = map[string]filemap.File{
