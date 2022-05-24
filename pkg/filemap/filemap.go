@@ -82,6 +82,31 @@ func (fm *Filemap) LoadFilesFromGlob(glob string) error {
 
 // WriteUpdatesToFiles Writes the updated contents of each file to the directory.
 func (fm *Filemap) WriteUpdatesToFiles() error {
+	for _, file := range fm.Files {
+		filePath := filepath.Join(file.Path, file.Tag+".yaml")
+		// locate the base directory of filePath
+		dir := filepath.Dir(filePath)
+		// create the directory if it does not exist
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err := os.MkdirAll(dir, 0755)
+			if err != nil {
+				return err
+			}
+		}
+
+		// write the file at the given path with read write permissions for user, read-only for others
+		f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		// write the file
+		_, err = f.WriteString(file.Content)
+		if err != nil {
+			return err
+		}
+
+	}
 	return nil
 }
 
