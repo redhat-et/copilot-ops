@@ -40,8 +40,18 @@ Here's a breakdown of the generate process:
 ### Usage 
 
 ```sh
+# to create a Jupyter Notebook which uses a GPU to accelerate machine-learning tasks
+copilot-ops generate --write \
+	--request "create a Jupyter Notebook that specifies a GPU resource"
+
 # to generate a Pod that mounts a given ConfigMap
-copilot-ops 
+copilot-ops generate -f examples/stock-data.yaml --write \
+  --request "create a Pod which runs an express.js app and mounts the stock-data configmap to trade stocks"
+
+# launch a Job which pulls data from the S3 bucket at 's3://my-bucket/data.csv' and loads it into a PVC in the same namespace
+copilot-ops generate -f examples/aws-credentials-secret.yaml --write \
+	--request "create a Job which pulls data from the S3 bucket at 's3://my-bucket/data.csv' and loads it into a PVC in the same namespace"
+
 ```
 
 ```console

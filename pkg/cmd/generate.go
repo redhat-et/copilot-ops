@@ -59,6 +59,7 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	if err == nil {
 		return PrintOrWriteOut(r)
 	}
+
 	// HACK: try other way to decode the output to a fileset
 	log.Printf("decoding failed, got error: %s", err)
 	log.Printf("trying fallback")
@@ -78,9 +79,9 @@ func PrepareGenerateInput(userInput string, encodedFiles string) string {
 
 	return fmt.Sprintf(`
 ## This document contains:
-## 1. Instructions describing new files that need to be created
-## 2. The existing files, each separated by a '%s'
-## 3. The newly created files, which are separated by '%s', and terminated by a '%s' sequence 
+## 1. Instructions specifying new Kubernetes objects that need to be created as YAML files
+## 2. Existing YAMLs, if any, each separated by a '%s'
+## 3. The requested YAML, separated by a '%s', and terminated by a '%s' sequence 
 
 ## 1. Instructions for the new files:
 %s
