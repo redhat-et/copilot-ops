@@ -27,6 +27,27 @@ Applying 2 changes ........ OK
 Done ...................... use `git diff/add/commit/etc`
 ```
 
+## `generate` command
+
+The `generate` command accepts a description of the file(s) needed and a set of files which are used to generate a new file based on their contents.
+
+Here's a breakdown of the generate process:
+1. Format the user's request along with the necessary files using a generate template that will be "autocompleted" by OpenAI.
+1. Have OpenAI attempt to complete the prompt and retrieve OpenAI's response.
+1. If OpenAI succeeded, parse the response and extract the newly generated files.
+1. Write the generated files either to the disk or to STDOUT. 
+
+### Usage 
+
+```sh
+# to generate a Pod that mounts a given ConfigMap
+copilot-ops 
+```
+
+```console
+> copilot-ops generate -f /path/to/file1.yaml -f /path/to/file2.yaml -f /path/to/file3.yaml
+```
+
 ## Copilot-Ops CLI
 
 The Copilot-Ops CLI applies AI principles in order to turn you into a GitOps ninja.

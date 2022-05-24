@@ -100,8 +100,11 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	return &r, nil
 }
 
+// PrintOrWriteOut Accepts a request object and writes the contents of the filemap
+// to the disk if specified, otherwise it prints to STDOUT.
 func PrintOrWriteOut(r *Request) error {
 
+	// dump the state of the FileMap
 	r.Filemap.LogDump()
 
 	if r.IsWrite {
@@ -125,6 +128,7 @@ func PrintOrWriteOut(r *Request) error {
 	return nil
 }
 
+// AddRequestFlags Appends flags to the given command which are then used at the command-line.
 func AddRequestFlags(cmd *cobra.Command) {
 
 	cmd.Flags().StringP(

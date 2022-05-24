@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
@@ -42,28 +43,36 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	input := PrepareGenerateInput(r.UserRequest, r.FilemapText)
 	log.Printf("requesting generate from OpenAI: %s", input)
 
+	// generate a response from OpenAI
 	output, err := r.OpenAI.GenerateCode(input)
 	if err != nil {
 		return err
 	}
-	log.Printf("received output from OpenAI: %q\n", output)
+
+	// print w/ escaped newlines
+	log.Printf("received output from OpenAI: %q\n", strings.ReplaceAll(output, "\\n", "\n"))
 
 	// err = r.Filemap.DecodeFromOutput(output)
 	r.Filemap = filemap.NewFilemap()
+	log.Printf("decoding output")
 	r.Filemap.DecodeFromOutput(output)
-	if err != nil {
-		// TODO try other way to decode the output to a fileset
-
-		// fallback - generate a new filename and put the content inside
-		newFileName := "generated-by-copilot-ops"
-		r.Filemap.Files = map[string]filemap.File{
-			newFileName: {Path: newFileName, Content: output, Tag: newFileName},
-		}
+	if err == nil {
+		return PrintOrWriteOut(r)
+	}
+	// TODO try other way to decode the output to a fileset
+	log.Printf("decoding failed, got error: %s", err)
+	log.Printf("trying fallback")
+	// fallback - generate a new filename and put the content inside
+	newFileName := "generated-by-copilot-ops"
+	r.Filemap.Files = map[string]filemap.File{
+		newFileName: {Path: newFileName, Content: output, Tag: newFileName},
 	}
 
 	return PrintOrWriteOut(r)
 }
 
+// PrepareGenerateInput Accepts the userInput and all of the files encoded as a string,
+// and formats them as a prompt to be sent off to OpenAI.
 func PrepareGenerateInput(userInput string, encodedFiles string) string {
 
 	return fmt.Sprintf(`
