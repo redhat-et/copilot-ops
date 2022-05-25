@@ -14,20 +14,34 @@ import (
 func NewGenerateCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use: "generate",
+		Use: COMMAND_GENERATE,
 
 		Short: "Proposes a new files to the repo",
 
 		Long: "Generate takes a request in natural language, packs the related files from the repo, calls AI engine to suggest generating new code based on the request, and optionally applies the suggested changes to the repo.",
 
-		Example: `  copilot-ops patch --request 'Add a new secret containing a pre-generated self signed SSL certificate, mount that secret from the syncthing deployment and also the volsync operator deployment, set syncthing configuration to serve with HTTPS using the mounted secret, and add a new go file with a code example that trusts a mounted certificate for the volsync operator pod' --fileset syncthing`,
+		Example: `  copilot-ops generate --file examples/app1/mysql-pvc.yaml --request 'Generate a pod that mounts the PVC. Set the pod resources requests and limits to 4 cpus and 5 Gig of memory.'`,
 
 		RunE: RunGenerate,
 	}
 
 	AddRequestFlags(cmd)
 
-	// cmd.Flags().Int16P()
+	// generate-specific flags
+	cmd.Flags().StringArrayP(
+		FLAG_FILES, "f", []string{},
+		"File paths (glob) to be considered for the patch (can be specified multiple times)",
+	)
+
+	cmd.Flags().StringArrayP(
+		FLAG_FILESETS, "s", []string{},
+		"Fileset names (defined in "+CONFIG_FILE+") to be considered for the patch (can be specified multiple times)",
+	)
+
+	cmd.Flags().Int32P(
+		FLAG_NTOKENS, "n", 512,
+		"Max number of tokens to generate",
+	)
 
 	return cmd
 }
@@ -84,19 +98,19 @@ func PrepareGenerateInput(userInput string, encodedFiles string) string {
 
 	// preamble
 	prompt += fmt.Sprintf(`## This document contains:
-## %d. Instructions specifying new Kubernetes objects that need to be created as YAML files`, numInstructions)
+## %d. Instructions describing how to generate a new Kubernetes YAML`, numInstructions)
 	numInstructions++
 
 	// include the encodedFiles if they are non-empty when stripped
 	if strings.TrimSpace(encodedFiles) != "" {
 		prompt += fmt.Sprintf(`
-## %d. Existing YAMLs, each separated by a '%s'`, numInstructions, filemap.FileDelimeter)
+## %d. The existing YAMLs, each separated by a '%s'`, numInstructions, filemap.FileDelimeter)
 		numInstructions++
 	}
 
 	// instruction for the generated code
 	prompt += fmt.Sprintf(`
-## %d. The requested YAML, separated by a '%s', and terminated by a '%s' sequence`, numInstructions, filemap.FileDelimeter, openai.CompletionEndOfSequence)
+## %d. The new YAML, terminated by an '%s'`, numInstructions, openai.CompletionEndOfSequence)
 	prompt += "\n"
 
 	// reset counter
@@ -104,7 +118,7 @@ func PrepareGenerateInput(userInput string, encodedFiles string) string {
 
 	// add the user input
 	prompt += fmt.Sprintf(`
-## %d. Instructions for the new YAMLs:
+## %d. Instructions for the new Kubernetes object:
 %s
 `, numInstructions, userInput)
 	numInstructions++
@@ -120,7 +134,7 @@ func PrepareGenerateInput(userInput string, encodedFiles string) string {
 
 	// add the completion sequence
 	prompt += fmt.Sprintf(`
-## %d. The newly-generated YAMLs:
+## %d. The new YAML:
 `, numInstructions)
 	return prompt
 }

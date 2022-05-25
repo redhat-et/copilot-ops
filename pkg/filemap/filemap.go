@@ -38,7 +38,11 @@ func NewFilemap() *Filemap {
 func (fm *Filemap) LogDump() {
 	log.Printf("filemap: len %d\n", len(fm.Files))
 	for _, f := range fm.Files {
-		short := strings.ReplaceAll(f.Content[0:30], "\n", " ")
+		l := len(f.Content)
+		if l > 30 {
+			l = 30
+		}
+		short := strings.ReplaceAll(f.Content[:l], "\n", " ")
 		log.Printf(" - %-10s: %-20s [%s ...] len %d\n", f.Tag, f.Path, short, len(f.Content))
 	}
 }

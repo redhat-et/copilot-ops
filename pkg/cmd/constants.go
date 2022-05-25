@@ -1,8 +1,17 @@
 package cmd
 
-const FLAG_REQUEST = "request"
-const FLAG_WRITE = "write"
-const FLAG_PATH = "path"
-const FLAG_FILES = "file"
-const FLAG_FILESETS = "fileset"
-const FLAG_LENGTH = "length"
+// FLAG Constants which define the names of flags used in commands.
+const (
+	FLAG_REQUEST  = "request"
+	FLAG_WRITE    = "write"
+	FLAG_PATH     = "path"
+	FLAG_FILES    = "file"
+	FLAG_FILESETS = "fileset"
+	FLAG_NTOKENS  = "ntokens"
+)
+
+// COMMAND Constants which define the names of commands used in the CLI.
+const (
+	COMMAND_EDIT     = "edit"
+	COMMAND_GENERATE = "generate"
+)
