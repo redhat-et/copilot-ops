@@ -78,6 +78,7 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 // PrepareGenerateInput Accepts the userInput and all of the files encoded as a string,
 // and formats them as a prompt to be sent off to OpenAI.
 func PrepareGenerateInput(userInput string, encodedFiles string) string {
+	// HACK: prompt wording needs to be adjusted to improve accuracy
 	var prompt string = ""
 	var numInstructions int8 = 1
 
