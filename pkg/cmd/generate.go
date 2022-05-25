@@ -50,7 +50,9 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	}
 
 	// print w/ escaped newlines
-	log.Printf("received output from OpenAI: %q\n", strings.ReplaceAll(output, "\\n", "\n"))
+	if !r.IsWrite {
+		log.Printf("received output from OpenAI: %s", strings.ReplaceAll(output, "\\n", "\n"))
+	}
 
 	// err = r.Filemap.DecodeFromOutput(output)
 	r.Filemap = filemap.NewFilemap()
@@ -76,19 +78,48 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 // PrepareGenerateInput Accepts the userInput and all of the files encoded as a string,
 // and formats them as a prompt to be sent off to OpenAI.
 func PrepareGenerateInput(userInput string, encodedFiles string) string {
+	var prompt string = ""
+	var numInstructions int8 = 1
 
-	return fmt.Sprintf(`
-## This document contains:
-## 1. Instructions specifying new Kubernetes objects that need to be created as YAML files
-## 2. Existing YAMLs, if any, each separated by a '%s'
-## 3. The requested YAML, separated by a '%s', and terminated by a '%s' sequence 
+	// preamble
+	prompt += fmt.Sprintf(`## This document contains:
+## %d. Instructions specifying new Kubernetes objects that need to be created as YAML files`, numInstructions)
+	numInstructions++
 
-## 1. Instructions for the new files:
+	// include the encodedFiles if they are non-empty when stripped
+	if strings.TrimSpace(encodedFiles) != "" {
+		prompt += fmt.Sprintf(`
+## %d. Existing YAMLs, each separated by a '%s'`, numInstructions, filemap.FileDelimeter)
+		numInstructions++
+	}
+
+	// instruction for the generated code
+	prompt += fmt.Sprintf(`
+## %d. The requested YAML, separated by a '%s', and terminated by a '%s' sequence`, numInstructions, filemap.FileDelimeter, openai.CompletionEndOfSequence)
+	prompt += "\n"
+
+	// reset counter
+	numInstructions = 1
+
+	// add the user input
+	prompt += fmt.Sprintf(`
+## %d. Instructions for the new YAMLs:
 %s
+`, numInstructions, userInput)
+	numInstructions++
 
-## 2. The existing files:
+	// add the encoded files if they exist
+	if strings.TrimSpace(encodedFiles) != "" {
+		prompt += fmt.Sprintf(`
+## %d. Existing YAMLs:
 %s
+`, numInstructions, encodedFiles)
+		numInstructions++
+	}
 
-## 3. The newly-created files:
-`, filemap.FileDelimeter, filemap.FileDelimeter, openai.CompletionEndOfSequence, userInput, encodedFiles)
+	// add the completion sequence
+	prompt += fmt.Sprintf(`
+## %d. The newly-generated YAMLs:
+`, numInstructions)
+	return prompt
 }
