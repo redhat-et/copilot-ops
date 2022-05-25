@@ -10,3 +10,6 @@ filesets:
   - name: cluster-scope-overlays
     files:
     - examples/stale_dev_overlay/*.yaml
+  - name: app1
+    files:
+      - examples/app1/*.yaml

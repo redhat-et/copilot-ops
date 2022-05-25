@@ -130,7 +130,7 @@ func (openAI *OpenAIClient) GenerateCode(input string) (string, error) {
 	var completionBody CompletionRequestBody = CompletionRequestBody{
 		Prompt:    input,
 		Stop:      []string{CompletionEndOfSequence},
-		MaxTokens: 512,
+		MaxTokens: openAI.NTokens,
 		BodyParameters: BodyParameters{
 			Temperature: 0,
 		},

@@ -28,7 +28,7 @@ func NewRootCmd() *cobra.Command {
 	  and can be used to implement github bots, editor extensions, and more.
 	`,
 
-		Example: `  copilot-ops patch --help`,
+		Example: `  copilot-ops generate --help`,
 
 		// Usage on every error is too noisy and makes it harder
 		// to read the error message, so disabling it
@@ -36,9 +36,8 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	// Add subcommands of the root command
-	cmd.AddCommand(NewPatchCmd())
 	cmd.AddCommand(NewGenerateCmd())
-	// cmd.AddCommand(NewEditCmd())
+	cmd.AddCommand(NewEditCmd())
 
 	return cmd
 }

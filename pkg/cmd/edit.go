@@ -11,11 +11,15 @@ import (
 func NewEditCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:     "edit",
-		Short:   "Edits a single file provided to the CLI",
-		Long:    "Given a file and a prompt, edit will pinpoint what changes are being requested and attempt to make them.",
-		Example: `  copilot-ops edit --file mysql-pvc.yaml --request 'Increase the size of the PVC to 100Gi'`,
-		RunE:    RunEdit,
+		Use: COMMAND_EDIT,
+
+		Short: "Edits a single file provided to the CLI",
+
+		Long: "Given a file and a request, edit will pinpoint what changes are being requested and attempt to make them.",
+
+		Example: `  copilot-ops edit --file examples/app1/mysql-pvc.yaml --request 'Increase the size of the PVC to 100Gi'`,
+
+		RunE: RunEdit,
 	}
 
 	AddRequestFlags(cmd)
@@ -29,6 +33,7 @@ func NewEditCmd() *cobra.Command {
 	return cmd
 }
 
+// RunEdit Runs when the `edit` command is
 func RunEdit(cmd *cobra.Command, args []string) error {
 
 	r, err := PrepareRequest(cmd, openai.OpenAICodeDavinciEditV1)
@@ -36,10 +41,17 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO continue this edit command
-	// parseYAML() -> send to openai
-	// response() -> determine which lines to edit
-	log.Printf("TODO EDIT: %v\n", r)
+	output, err := r.OpenAI.EditCode(r.FilemapText, r.UserRequest)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	log.Printf("received patch from OpenAI: %q\n", output)
+
+	err = r.Filemap.DecodeFromOutput(output)
+	if err != nil {
+		return err
+	}
+
+	return PrintOrWriteOut(r)
 }

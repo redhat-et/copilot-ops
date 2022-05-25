@@ -115,6 +115,8 @@ type OpenAIClient struct {
 	AuthToken string
 	// OrganizationID is the ID of the organization used to authenticate with the OpenAI API.
 	OrganizationID string
+	// NTokens Is an integer representing the maximum number of tokens to generate in the completion.
+	NTokens int32
 }
 
 // ErrorResponse Defines an Error object which will be returned by OpenAI when an error occurs.
