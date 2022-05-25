@@ -1,0 +1,13 @@
+name: "TODO to issue"
+on: 
+  push:
+    branches:
+      - "main"
+jobs:
+  golang-to-list:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@master"
+      - name: "TODO to Issue"
+        uses: "alstr/todo-to-issue-action@v4.6.5"
+        id: "todo"
