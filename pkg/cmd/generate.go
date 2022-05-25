@@ -104,7 +104,7 @@ func PrepareGenerateInput(userInput string, encodedFiles string) string {
 	// include the encodedFiles if they are non-empty when stripped
 	if strings.TrimSpace(encodedFiles) != "" {
 		prompt += fmt.Sprintf(`
-## %d. The existing YAMLs, each separated by a '%s'`, numInstructions, filemap.FileDelimeter)
+## %d. The existing YAMLs, each separated by a '%s'`, numInstructions, filemap.FILE_DELIMETER)
 		numInstructions++
 	}
 

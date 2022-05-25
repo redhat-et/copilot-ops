@@ -10,9 +10,12 @@ import (
 	"strings"
 )
 
+// FILE Constants define the constant values that are used for parsing files.
 const (
-	// FileDelimeter Is the string used to separate files when encoding/decoding.
-	FileDelimeter = "==="
+	// FILE_DELIMETER Is the string used to separate files when encoding/decoding.
+	FILE_DELIMETER = "==="
+	// FILE_TAG_PREFIX Is a string that indicates that the following string is the file's tag.
+	FILE_TAG_PREFIX = "@"
 )
 
 // File represents a file which was referenced in the issue to be updated.
@@ -144,10 +147,10 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 	var i int = 0
 	// join the files together along with their tag
 	for tagname, file := range fm.Files {
-		input += fmt.Sprintf("# @%s\n%s\n", tagname, file.Content)
+		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, tagname, file.Content)
 		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
-			input += fmt.Sprintf("%s\n", FileDelimeter)
+			input += fmt.Sprintf("%s\n", FILE_DELIMETER)
 		}
 		i++
 	}
@@ -160,10 +163,10 @@ func (fm *Filemap) EncodeToInputTextFullPaths() (string, error) {
 	var i int = 0
 	// join the files together along with their tag
 	for _, file := range fm.Files {
-		input += fmt.Sprintf("# @%s\n%s\n", file.Path, file.Content)
+		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, file.Path, file.Content)
 		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
-			input += fmt.Sprintf("%s\n", FileDelimeter)
+			input += fmt.Sprintf("%s\n", FILE_DELIMETER)
 		}
 		i++
 	}
@@ -172,14 +175,14 @@ func (fm *Filemap) EncodeToInputTextFullPaths() (string, error) {
 
 // ExtractTagName Extracts the tagname from the given content, providing its line number in the content, or an error if it doesn't exist.
 func ExtractTagName(content string) (string, int32, error) {
-	// The tagname would be on a line in the format of: "# @tagname\n"
+	// The tagname would be on a line in the format of: "# {FILE_TAG_PREFIX}tagname\n"
 	// We can split the line by the '#' character and then trim the leading and trailing whitespace.
 	lines := strings.Split(content, "\n")
 
-	// search content for regex of the following pattern: /#\s*\@(.+)/g
+	// search content for regex of the following pattern: /#\s*\{FILE_TAG_PREFIX}(.+)/g
 	// if found, return the tagname
 	// if not found, return an error
-	pattern := `#\s*\@(.+)`
+	pattern := fmt.Sprintf(`#\s*\%s(.+)`, FILE_TAG_PREFIX)
 	regexPattern, err := regexp.Compile(pattern)
 	if err != nil {
 		return "", 0, err
@@ -235,7 +238,7 @@ func (fm *Filemap) DecodeFromOutput(content string) error {
 	// If the tagname is not found, we assume that the file is new and we will create a new file with the tagname.
 
 	// Split the content by the file delimeter
-	parts := strings.Split(content, FileDelimeter)
+	parts := strings.Split(content, FILE_DELIMETER)
 	fmt.Printf("num parts: %d\n", len(parts))
 	for _, part := range parts {
 		// Trim the leading and trailing whitespace

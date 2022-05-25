@@ -58,8 +58,8 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 		return nil, err
 	}
 
-	// TODO this prints sensitive keys - can we redact it from the printed output?
-	log.Printf("conf: %+v\n", conf)
+	// WARNING we should not consider printing conf with its secret keys
+	log.Printf("Filesets: %+v\n", conf.Filesets)
 
 	fm := filemap.NewFilemap()
 
