@@ -26,8 +26,10 @@ jobs:
           go-version: 1.18
       - run: go build -v ./...
       - run: go test -v ./...
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
       - run: go vet -v ./...
-
   build-all:
     runs-on: ubuntu-latest
     steps:
