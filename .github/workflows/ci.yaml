@@ -40,6 +40,9 @@ jobs:
           if [[ "$COMPRESSION_ALG" -eq "middle-out" ]]; then
             echo "we know the value of compression alg"
           fi
+          if [[ "$COMPRESSION_ALG" -eq "bottom-up" ]]; then
+            echo "the value doesn't match what we had set"
+          fi
       - run: go test -v ./...
         shell: bash
       - run: go vet -v ./...
