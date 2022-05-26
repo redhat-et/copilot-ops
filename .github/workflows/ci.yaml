@@ -19,6 +19,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -27,9 +30,6 @@ jobs:
       - run: go build -v ./...
       - run: go test -v ./...
         shell: bash
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
       - run: go vet -v ./...
   build-all:
     runs-on: ubuntu-latest
