@@ -25,6 +25,24 @@ jobs:
         with:
           go-version: 1.18
       - run: go build -v ./...
+      - name: "verify secrets"
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+        run: |
+          if [[ -z "${OPENAI_API_KEY}" ]]; then
+            echo "OPENAI_API_KEY is not set"
+            exit 1
+          else
+            echo "OPENAI_API_KEY is set"
+          fi
+          if [[ -z "${OPENAI_ORG_ID}" ]]; then
+            echo "OPENAI_ORG_ID is not set"
+            exit 1
+          else
+            echo "OPENAI_ORG_ID is set"
+          fi
       - run: go test -v ./...
         shell: bash
         env:
