@@ -59,6 +59,12 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	}
 
 	// WARNING we should not consider printing conf with its secret keys
+	// print the secret keys as asterisks according to their length
+	apiKeyAsStars := ""
+	for i := 0; i < len(conf.OpenAI.APIKey); i++ {
+		apiKeyAsStars += "*"
+	}
+	log.Printf("OPENAI_API_KEY: %s\n", apiKeyAsStars)
 	log.Printf("Filesets: %+v\n", conf.Filesets)
 
 	fm := filemap.NewFilemap()
