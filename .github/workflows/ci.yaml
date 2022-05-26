@@ -16,8 +16,8 @@ on:
       - "data-lab/**"
 
 jobs:
-
   test:
+    environment: OPENAI_TESTING
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -42,7 +42,7 @@ jobs:
           fi
           if [[ "$COMPRESSION_ALG" -eq "bottom-up" ]]; then
             echo "the value doesn't match what we had set"
-          fi
+            fi
       - run: go test -v ./...
         shell: bash
       - run: go vet -v ./...
