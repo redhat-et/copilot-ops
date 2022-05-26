@@ -22,12 +22,24 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+      COMPRESSION_ALG: ${{ secrets.COMPRESSION_ALGORITHM }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
       - run: go build -v ./...
+      - shell: bash
+        run: |
+          if [[ "$OPENAI_API_KEY" -eq "" ]]; then
+            echo "OPENAI_API_KEY is empty"
+          fi
+          if [[ "$COMPRESSION_ALG" -eq "" ]]; then
+            echo "COMPRESSION_ALG is empty"
+          fi
+          if [[ "$COMPRESSION_ALG" -eq "middle-out" ]]; then
+            echo "we know the value of compression alg"
+          fi
       - run: go test -v ./...
         shell: bash
       - run: go vet -v ./...
