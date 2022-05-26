@@ -33,6 +33,9 @@ jobs:
           if [[ "$OPENAI_API_KEY" -eq "" ]]; then
             echo "OPENAI_API_KEY is empty"
           fi
+          if [[ "$OPENAI_API_KEY" -eq "should-not-equal" ]]; then
+            echo "OPENAI_API_KEY should not equal should-not-equal"
+          fi
           if [[ "$COMPRESSION_ALG" -eq "" ]]; then
             echo "COMPRESSION_ALG is empty"
           fi
@@ -41,7 +44,7 @@ jobs:
           fi
           if [[ "$COMPRESSION_ALG" -eq "bottom-up" ]]; then
             echo "the value doesn't match what we had set"
-            fi
+          fi
       - run: go test -v ./...
         shell: bash
       - run: go vet -v ./...
