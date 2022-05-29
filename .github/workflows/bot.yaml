@@ -1,0 +1,44 @@
+name: BOT
+
+on:
+  issues:
+    types:
+      - opened
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    if: ${{
+      (github.event.comment && contains(github.event.comment, '/copilot-ops')) || 
+      (!github.event.comment && contains(github.event.issue.body, '/copilot-ops')) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - run: go build -v ./...
+      - name: invoke
+        id: invoke
+        shell: bash
+        run: |
+          grep --color=no -E '^/copilot-ops ' <<< "${{ github.event.comment || github.event.issue.body }}" |
+          while read line
+          do
+            ./copilot-ops ${line:13} > stdout.log 2> stderr.log || true
+            echo ::set-output name=stdout::`cat stdout.log`
+            echo ::set-output name=stderr::`cat stderr.log`
+          done
+      - name: reply
+        if: ${{ steps.invoke.outputs.stdout || steps.invoke.outputs.stderr }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '${{ steps.invoke.outputs.stdout || steps.invoke.outputs.stderr }}',
+            });
