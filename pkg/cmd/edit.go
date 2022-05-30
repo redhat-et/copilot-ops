@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +43,11 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := r.OpenAI.EditCode(r.FilemapText, r.UserRequest)
+	// trigger GPT-3 to preserve the @tagname format in the file
+	editSuffix := fmt.Sprintf("The resulting file should preserve the '# %stagname' format used to identify the YAML(s).", filemap.FILE_TAG_PREFIX)
+	editInstruction := fmt.Sprintf("%s\n\n%s", r.UserRequest, editSuffix)
+
+	output, err := r.OpenAI.EditCode(r.FilemapText, editInstruction)
 	if err != nil {
 		return err
 	}
