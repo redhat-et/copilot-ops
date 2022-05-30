@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"path"
 	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
@@ -81,7 +82,7 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	log.Printf("trying fallback")
 
 	// fallback - generate a new filename and put the content inside
-	newFileName := "generated-by-copilot-ops"
+	newFileName := path.Join("generated-by-copilot-ops", "generated-by-copilot-ops.yaml")
 	r.Filemap.Files = map[string]filemap.File{
 		newFileName: {Path: newFileName, Content: output, Tag: newFileName},
 	}
@@ -94,15 +95,46 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 func PrepareGenerateInput(userInput string, encodedFiles string) string {
 	// HACK: prompt wording needs to be adjusted to improve accuracy
 	var prompt string = ""
-	var numInstructions int8 = 1
+	var withFiles bool = len(encodedFiles) > 0
 
 	// preamble
-	prompt += fmt.Sprintf(`## This document contains:
-## %d. Instructions describing how to generate a new Kubernetes YAML`, numInstructions)
+	prompt += preamble(withFiles)
+
+	// instructions
+	prompt += instructions(withFiles)
+
+	// prompt the AI for a response
+	prompt += callToActionSequence(userInput, encodedFiles)
+	return prompt
+}
+
+// preamble Returns the preamble for the generation prompt, with varied text
+// depending on whether or not the prompt will be including other relevant YAML
+// files.
+func preamble(withFiles bool) string {
+	if withFiles {
+		return `## This document contains instructions for a new Kubernetes YAML that needs to be created,
+## along with the relevant YAMLs for context, and the resultant YAML.`
+	} else {
+		return `## This document contains instructions for a new Kubernetes YAML that needs to be created,
+## and the resultant YAML.`
+	}
+}
+
+// instructions Returns the sequence in the prompt which details the ordering of the
+// document for the AI, and what it should expect when parsing the tokens.
+func instructions(withFiles bool) string {
+	var numInstructions int8 = 1
+
+	// instructions
+	prompt := fmt.Sprintf(`
+##
+## The structure of the document is as follows:
+## %d. Description of the desired YAML`, numInstructions)
 	numInstructions++
 
-	// include the encodedFiles if they are non-empty when stripped
-	if strings.TrimSpace(encodedFiles) != "" {
+	// mention that extra YAMLs will be provided for context
+	if withFiles {
 		prompt += fmt.Sprintf(`
 ## %d. The existing YAMLs, each separated by a '%s'`, numInstructions, filemap.FILE_DELIMETER)
 		numInstructions++
@@ -113,14 +145,20 @@ func PrepareGenerateInput(userInput string, encodedFiles string) string {
 ## %d. The new YAML, terminated by an '%s'`, numInstructions, openai.CompletionEndOfSequence)
 	prompt += "\n"
 
+	return prompt
+}
+
+// callToActionSequence Creates the section which includes the actual request
+// for the generated YAML, along with the encodedFiles for context if those are also needed.
+func callToActionSequence(request string, encodedFiles string) string {
 	// reset counter
-	numInstructions = 1
+	numInstructions := 1
 
 	// add the user input
-	prompt += fmt.Sprintf(`
-## %d. Instructions for the new Kubernetes object:
+	prompt := fmt.Sprintf(`
+## %d. Instructions for the new Kubernetes YAML:
 %s
-`, numInstructions, userInput)
+`, numInstructions, request)
 	numInstructions++
 
 	// add the encoded files if they exist
