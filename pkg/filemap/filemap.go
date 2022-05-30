@@ -46,7 +46,7 @@ func (fm *Filemap) LogDump() {
 			l = 30
 		}
 		short := strings.ReplaceAll(f.Content[:l], "\n", " ")
-		log.Printf(" - %-10s: %-20s [%s ...] len %d\n", f.Tag, f.Path, short, len(f.Content))
+		log.Printf(" - tag: %-10q: path: %-20q [%s ...] len %d\n", f.Tag, f.Path, short, len(f.Content))
 	}
 }
 
@@ -90,19 +90,26 @@ func (fm *Filemap) LoadFilesFromGlob(glob string) error {
 // WriteUpdatesToFiles Writes the updated contents of each file to the directory.
 func (fm *Filemap) WriteUpdatesToFiles() error {
 	for _, file := range fm.Files {
-		filePath := filepath.Join(file.Path, file.Tag+".yaml")
+		// add extension if necessary, assume this is YAML for the time being
+		// HACK: classify the relevant extension (e.g. .yaml, .yml, .json)
+		// fileName := file.Tag
+		// if len(strings.Split(file.Tag, ".")) == 1 {
+		// 	fileName += ".yaml"
+		// }
+		log.Printf("path: %q, tag: %q\n", file.Path, file.Tag)
 		// locate the base directory of filePath
-		dir := filepath.Dir(filePath)
+		dirPath := filepath.Dir(file.Path)
 		// create the directory if it does not exist
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			err := os.MkdirAll(dir, 0755)
+		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+			err := os.MkdirAll(dirPath, 0755)
 			if err != nil {
 				return err
 			}
 		}
 
 		// write the file at the given path with read write permissions for user, read-only for others
-		f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+		log.Printf("writing to file %q\n", file.Path)
+		f, err := os.OpenFile(file.Path, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
 			return err
 		}
