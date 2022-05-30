@@ -63,6 +63,26 @@ copilot-ops generate -f examples/aws-credentials-secret.yaml --request '
 '
 ```
 
+To control the amount of tokens used when generating, you can also
+specify the `--ntokens` flag.
+
+Here's an example where we want OpenAI to generate a service based
+on a Deployment, but should not exceed 100 tokens:
+
+```bash
+copilot-ops generate --request "Create a Service named 'mongodb-service' to expose the mongodb-deployment" \
+	--file deployments/mongodb-deployment.yaml \
+	--ntokens 100
+```
+
+To avoid providing multiple files, we can use the `--filesets` flag to specify a list of filesets to use.
+
+For example:
+
+```bash
+copilot-ops generate --request "Create a Service for each of these deployments" --fileset deployments
+```
+
 ### Under the hood
 
 In a nutshell, `copilot-ops` functions by formatting the user input and provided files, if any, in a way that an OpenAI would understand it as a programmer taking an issue and updating it.
