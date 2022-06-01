@@ -11,7 +11,7 @@ on:
 jobs:
   bot:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment || github.event.issue.body, '/copilot-ops')
+    if: contains(github.event.comment.body || github.event.issue.body, '/copilot-ops')
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -30,7 +30,7 @@ jobs:
         id: invoke
         shell: bash
         run: |
-          grep --color=no -E '^/copilot-ops ' <<< "${{ github.event.comment || github.event.issue.body }}" |
+          grep --color=no -E '^/copilot-ops ' <<< "${{ github.event.comment.body || github.event.issue.body }}" |
           while read line
           do
             echo "Extracted command line from comment: $line"
