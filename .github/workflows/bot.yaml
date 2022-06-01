@@ -19,7 +19,15 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - run: go build -v ./...
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - run: go build
       - name: invoke
         id: invoke
         shell: bash
@@ -27,6 +35,7 @@ jobs:
           grep --color=no -E '^/copilot-ops ' <<< "${{ github.event.comment || github.event.issue.body }}" |
           while read line
           do
+            echo "Extracted command line from comment: $line"
             ./copilot-ops ${line:13} > stdout.log 2> stderr.log || true
             echo ::set-output name=stdout::`cat stdout.log`
             echo ::set-output name=stderr::`cat stderr.log`
