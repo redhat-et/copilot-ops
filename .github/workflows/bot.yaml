@@ -11,9 +11,7 @@ on:
 jobs:
   bot:
     runs-on: ubuntu-latest
-    if: ${{
-      (github.event.comment && contains(github.event.comment, '/copilot-ops')) || 
-      (!github.event.comment && contains(github.event.issue.body, '/copilot-ops')) }}
+    if: contains(github.event.comment || github.event.issue.body, '/copilot-ops')
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -41,7 +39,7 @@ jobs:
             echo ::set-output name=stderr::`cat stderr.log`
           done
       - name: reply
-        if: ${{ steps.invoke.outputs.stdout || steps.invoke.outputs.stderr }}
+        if: steps.invoke.outputs.stdout || steps.invoke.outputs.stderr
         uses: actions/github-script@v4
         with:
           script: |
