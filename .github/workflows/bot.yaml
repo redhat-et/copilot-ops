@@ -30,7 +30,7 @@ jobs:
         id: invoke
         shell: bash
         run: |
-          grep --color=no -E '^/copilot-ops ' <<< "${{ github.event.comment.body || github.event.issue.body }}" |
+          grep --color=no -E '^/copilot-ops ' << 'EOF_COPILOT_OPS_CMD' |
           while read line
           do
             echo "Extracted command line from comment: $line"
@@ -38,6 +38,8 @@ jobs:
             echo ::set-output name=stdout::`cat stdout.log`
             echo ::set-output name=stderr::`cat stderr.log`
           done
+          ${{ github.event.comment.body || github.event.issue.body }}
+          EOF_COPILOT_OPS_CMD
       - name: reply
         if: steps.invoke.outputs.stdout || steps.invoke.outputs.stderr
         uses: actions/github-script@v4
