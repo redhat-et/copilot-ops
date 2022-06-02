@@ -26,28 +26,50 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - run: go build
-      - name: invoke
-        id: invoke
-        shell: bash
-        run: |
-          grep --color=no -E '^/copilot-ops ' << 'EOF_COPILOT_OPS_CMD' |
-          while read line
-          do
-            echo "Extracted command line from comment: $line"
-            ./copilot-ops ${line:13} > stdout.log 2> stderr.log || true
-            echo ::set-output name=stdout::`cat stdout.log`
-            echo ::set-output name=stderr::`cat stderr.log`
-          done
-          ${{ github.event.comment.body || github.event.issue.body }}
-          EOF_COPILOT_OPS_CMD
-      - name: reply
-        if: steps.invoke.outputs.stdout || steps.invoke.outputs.stderr
-        uses: actions/github-script@v4
+      - uses: actions/github-script@v6
         with:
           script: |
+            const input = 
+              context?.payload?.comment?.body || 
+              context?.payload?.issue?.body;
+
+            for (const line in body.split('\n')) {
+              if (!/^\s*\/copilot-ops\s*/.test(line)) continue;
+              console.log('found command line:', line);
+
+              // extracting args from the command line:
+              const args = [];
+              const re = /\s*(?:"((?:\\.|[^"])*)"|((?:\\.|[^"\s])+))\s*/y;
+              while (re.lastIndex !== line.length) {
+                const m = re.exec(line);
+                if (!m) {
+                  console.log('failed to parse args:', line);
+                  args.length = 0;
+                  break;
+                }
+                args.push((m[1] || m[2] || '').replace(/\\(.)/g, '$1'));
+              }
+              if (args.length === 0) continue;
+
+              // executing command with args
+              let reply = '';
+              try {
+                console.log('exec with args:', args);
+                reply += '\n### exec: `' JSON.stringify(args) + '`\n';
+                const { stdout, stderr } = await exec.getExecOutput('./copilot-ops', args.slice(1));
+                console.log('stdout:', stdout);
+                console.log('stderr:', stderr);
+                reply += '\n### stdout:' + '\n```\n' + stdout + '\n```\n';
+                reply += '\n### stderr:' + '\n```\n' + stderr + '\n```\n';
+              } catch (err) {
+                console.log('exec failed:', err);
+                reply += '\n### error:\n```\n' + err.stack + '\n```\n';
+              }
+            }
+
             github.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '${{ steps.invoke.outputs.stdout || steps.invoke.outputs.stderr }}',
+              body: reply,
             });
