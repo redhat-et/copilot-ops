@@ -49,13 +49,13 @@ jobs:
                 }
                 args.push((m[1] || m[2] || '').replace(/\\(.)/g, '$1'));
               }
-              if (args.length === 0) continue;
+              if (!args.length) continue;
 
               // executing command with args
               let reply = '';
               try {
                 console.log('exec with args:', args);
-                reply += '\n### exec: `' JSON.stringify(args) + '`\n';
+                reply += '\n### exec: `' + JSON.stringify(args) + '`\n';
                 const { stdout, stderr } = await exec.getExecOutput('./copilot-ops', args.slice(1));
                 console.log('stdout:', stdout);
                 console.log('stderr:', stderr);
@@ -63,7 +63,7 @@ jobs:
                 reply += '\n### stderr:' + '\n```\n' + stderr + '\n```\n';
               } catch (err) {
                 console.log('exec failed:', err);
-                reply += '\n### error:\n```\n' + err.stack + '\n```\n';
+                reply += '\n### error:' + '\n```\n' + err.stack + '\n```\n';
               }
             }
 
