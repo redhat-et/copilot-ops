@@ -36,7 +36,7 @@ jobs:
 
             for (const line in body.split('\n')) {
               if (!/^\s*\/copilot-ops\s*/.test(line)) continue;
-              console.log('found command line:', line);
+              core.info('found command line:', line);
 
               // extracting args from the command line:
               const args = [];
@@ -51,23 +51,23 @@ jobs:
               }
 
               if (!args.length) {
-                console.log('failed to parse args:', line);
+                core.warning('failed to parse args:', line);
                 reply += '\n### failed: `' + line + '`\n';
                 continue;
               }
 
               // executing command with args
               try {
-                console.log('exec with args:', args);
+                core.info('exec with args:', args);
                 if (reply) reply += '\n\n---\n\n';
                 reply += '\n### exec: `' + JSON.stringify(args) + '`\n';
                 const { stdout, stderr } = await exec.getExecOutput('./copilot-ops', args.slice(1));
-                console.log('stdout:', stdout);
-                console.log('stderr:', stderr);
+                core.info('stdout:', stdout);
+                core.info('stderr:', stderr);
                 reply += '\n### stdout:' + '\n```\n' + stdout + '\n```\n';
                 reply += '\n### stderr:' + '\n```\n' + stderr + '\n```\n';
               } catch (err) {
-                console.log('exec failed:', err);
+                core.warning('exec failed:', err);
                 reply += '\n### error:' + '\n```\n' + err.stack + '\n```\n';
               }
             }
