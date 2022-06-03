@@ -44,13 +44,17 @@ jobs:
               while (re.lastIndex !== line.length) {
                 const m = re.exec(line);
                 if (!m) {
-                  console.log('failed to parse args:', line);
                   args.length = 0;
                   break;
                 }
                 args.push((m[1] || m[2] || '').replace(/\\(.)/g, '$1'));
               }
-              if (!args.length) continue;
+
+              if (!args.length) {
+                console.log('failed to parse args:', line);
+                reply += '\n### failed: `' + line + '`\n';
+                continue;
+              }
 
               // executing command with args
               try {
@@ -68,9 +72,11 @@ jobs:
               }
             }
 
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: reply,
-            });
+            if (reply) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: reply,
+              });
+            }
