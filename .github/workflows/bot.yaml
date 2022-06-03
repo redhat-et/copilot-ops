@@ -30,16 +30,13 @@ jobs:
         with:
           script: |
             let reply = '';
-            console.log('payload:', context?.payload);
             const body = 
               context?.payload?.comment?.body || 
               context?.payload?.issue?.body;
-            console.log('body', body);
-            core.warning('body:', body);
 
-            for (const line in body.split('\n')) {
+            for (const line of body.split('\n')) {
               if (!/^\s*\/copilot-ops\s*/.test(line)) continue;
-              core.info('found command line:', line);
+              console.log('found command line:', line);
 
               // extracting args from the command line:
               const args = [];
@@ -54,23 +51,23 @@ jobs:
               }
 
               if (!args.length) {
-                core.warning('failed to parse args:', line);
+                console.warn('failed to parse args:', line);
                 reply += '\n### failed: `' + line + '`\n';
                 continue;
               }
 
               // executing command with args
               try {
-                core.info('exec with args:', args);
+                console.log('exec with args:', args);
                 if (reply) reply += '\n\n---\n\n';
                 reply += '\n### exec: `' + JSON.stringify(args) + '`\n';
                 const { stdout, stderr } = await exec.getExecOutput('./copilot-ops', args.slice(1));
-                core.info('stdout:', stdout);
-                core.info('stderr:', stderr);
+                console.log('stdout:', stdout);
+                console.log('stderr:', stderr);
                 reply += '\n### stdout:' + '\n```\n' + stdout + '\n```\n';
                 reply += '\n### stderr:' + '\n```\n' + stderr + '\n```\n';
               } catch (err) {
-                core.warning('exec failed:', err);
+                console.warn('exec failed:', err);
                 reply += '\n### error:' + '\n```\n' + err.stack + '\n```\n';
               }
             }
