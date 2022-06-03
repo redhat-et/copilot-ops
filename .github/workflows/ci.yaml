@@ -6,15 +6,19 @@ on:
       - main
     tags:
       - "*"
+    paths-ignore:
+      - ".github/workflows/bot.yaml"
+      - ".github/workflows/todo-issue.yaml"
 
   pull_request:
     branches:
       - "*"
     paths-ignore:
-      - ".github/workflows/bot.yaml"
       - "**.md"
       - "docs/**"
       - "data-lab/**"
+      - ".github/workflows/bot.yaml"
+      - ".github/workflows/todo-issue.yaml"
 
 jobs:
 
