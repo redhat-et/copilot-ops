@@ -29,6 +29,7 @@ jobs:
       - uses: actions/github-script@v6
         with:
           script: |
+            let reply = '';
             const body = 
               context?.payload?.comment?.body || 
               context?.payload?.issue?.body;
@@ -52,9 +53,9 @@ jobs:
               if (!args.length) continue;
 
               // executing command with args
-              let reply = '';
               try {
                 console.log('exec with args:', args);
+                if (reply) reply += '\n\n---\n\n';
                 reply += '\n### exec: `' + JSON.stringify(args) + '`\n';
                 const { stdout, stderr } = await exec.getExecOutput('./copilot-ops', args.slice(1));
                 console.log('stdout:', stdout);
