@@ -27,8 +27,14 @@ jobs:
             ${{ runner.os }}-go-
       - run: go build
       - uses: actions/github-script@v6
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
         with:
           script: |
+            if (!process.env.OPENAI_API_KEY) {
+              throw new Error('OPENAI_API_KEY is not set')
+            }
             let reply = '';
             const body = 
               context?.payload?.comment?.body || 
