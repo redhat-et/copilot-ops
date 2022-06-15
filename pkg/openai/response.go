@@ -21,3 +21,18 @@ func (resp *OpenAIResponse) GetAllChoices() []string {
 	}
 	return choices
 }
+
+// GetNChoices returns a list of n choices returned by the AI engine.
+// n is the number of completions requested by the user.
+func (resp *OpenAIResponse) GetNChoices(n int32) ([]string, error) {
+	var choices []string
+	var i int32
+	if len(resp.Choices) > 0 {
+		for i = 0; i < n; i++ {
+			choices = append(choices, resp.Choices[i].Text)
+		}
+		return choices, nil
+	}
+
+	return choices, fmt.Errorf("no choices found")
+}
