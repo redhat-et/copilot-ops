@@ -32,6 +32,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	}
 	filesets, _ := cmd.Flags().GetStringArray(FLAG_FILESETS)
 	nTokens, _ := cmd.Flags().GetInt32(FLAG_NTOKENS)
+	nCompletions, _ := cmd.Flags().GetInt32(FLAG_NCOMPLETIONS)
 
 	log.Printf("flags:\n")
 	log.Printf(" - %-8s: %v\n", FLAG_REQUEST, request)
@@ -40,6 +41,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	log.Printf(" - %-8s: %v\n", FLAG_FILES, files)
 	log.Printf(" - %-8s: %v\n", FLAG_FILESETS, filesets)
 	log.Printf(" - %-8s: %v\n", FLAG_NTOKENS, nTokens)
+	log.Printf(" - %-8s: %v\n", FLAG_NCOMPLETIONS, nCompletions)
 
 	// Handle --path by changing the working directory
 	// so that every file name we refer to is relative to path
@@ -94,6 +96,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	// create OpenAI client
 	openAIClient := openai.CreateOpenAIClient(conf.OpenAI.ApiKey, conf.OpenAI.OrgId, engine)
 	openAIClient.NTokens = nTokens
+	openAIClient.NCompletions = nCompletions
 
 	r := Request{
 		Config:      conf,

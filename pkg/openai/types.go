@@ -117,6 +117,8 @@ type OpenAIClient struct {
 	OrganizationID string
 	// NTokens Is an integer representing the maximum number of tokens to generate in the completion.
 	NTokens int32
+	// NCompletions is an integer representing the maximum number of completions to generate from a prompt.
+	NCompletions int32
 }
 
 // ErrorResponse Defines an Error object which will be returned by OpenAI when an error occurs.

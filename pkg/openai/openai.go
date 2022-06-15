@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -131,6 +132,7 @@ func (openAI *OpenAIClient) GenerateCode(input string) (string, error) {
 		Prompt:    input,
 		Stop:      []string{CompletionEndOfSequence},
 		MaxTokens: openAI.NTokens,
+		N:         openAI.NCompletions,
 		BodyParameters: BodyParameters{
 			Temperature: 0,
 		},
@@ -149,11 +151,14 @@ func (openAI *OpenAIClient) GenerateCode(input string) (string, error) {
 		return "", err
 	}
 
-	// get the first response
-	response, err := completionResponse.GetFirstChoice()
+	// get n responses
+	response, err := completionResponse.GetNChoices(openAI.NCompletions)
 	if err != nil {
 		return "", err
 	}
 
-	return response, nil
+	// add in separator string between completions
+	output := "'" + strings.Join(response, "\n\n +----------------------------------------------------------+ \n\n")
+
+	return output, nil
 }

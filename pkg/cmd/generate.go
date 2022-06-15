@@ -44,6 +44,11 @@ func NewGenerateCmd() *cobra.Command {
 		"Max number of tokens to generate",
 	)
 
+	cmd.Flags().Int32P(
+		FLAG_NCOMPLETIONS, "c", 1,
+		"Number of completions to generate",
+	)
+
 	return cmd
 }
 
@@ -82,10 +87,24 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	log.Printf("trying fallback")
 
 	// fallback - generate a new filename and put the content inside
-	newFileName := path.Join("generated-by-copilot-ops", "generated-by-copilot-ops.yaml")
-	r.Filemap.Files = map[string]filemap.File{
-		newFileName: {Path: newFileName, Content: output, Tag: newFileName},
+
+	outputSplit := strings.Split(output, "\n\n +----------------------------------------------------------+ \n\n")
+
+	// Create a new file for every requested completion and store them in the "generated-by-copilot-ops" directory
+	var i int32
+	newMap := make(map[string]filemap.File)
+	for i = 0; i < r.OpenAI.NCompletions; i++ {
+		newFileName := path.Join("generated-by-copilot-ops", ("generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"))
+		var newFile filemap.File
+		newFile.Content = outputSplit[i]
+		newFile.Path = newFileName
+		newFile.Tag = newFileName
+
+		newMap[newFileName] = newFile
+
 	}
+
+	r.Filemap.Files = newMap
 
 	return PrintOrWriteOut(r)
 }
