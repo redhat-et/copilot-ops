@@ -17,3 +17,4 @@ go run main.go patch -f stock-data.yaml --request "rename the configmap to 'stoc
 # to erase existing fields
 go run main.go patch -f examples/stock-data.yaml --request "remove the existing data fields in @stock-data.yaml"
 ```
+<!--  -->
