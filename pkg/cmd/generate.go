@@ -90,21 +90,7 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 
 	outputSplit := strings.Split(output, "\n\n +----------------------------------------------------------+ \n\n")
 
-	// Create a new file for every requested completion and store them in the "generated-by-copilot-ops" directory
-	var i int32
-	newMap := make(map[string]filemap.File)
-	for i = 0; i < r.OpenAI.NCompletions; i++ {
-		newFileName := path.Join("generated-by-copilot-ops", ("generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"))
-		var newFile filemap.File
-		newFile.Content = outputSplit[i]
-		newFile.Path = newFileName
-		newFile.Tag = newFileName
-
-		newMap[newFileName] = newFile
-
-	}
-
-	r.Filemap.Files = newMap
+	r = generateNewFiles(r, outputSplit)
 
 	return PrintOrWriteOut(r)
 }
@@ -194,4 +180,24 @@ func callToActionSequence(request string, encodedFiles string) string {
 ## %d. The new YAML:
 `, numInstructions)
 	return prompt
+}
+
+// Create a new file for every requested completion and store them in the "generated-by-copilot-ops" directory
+func generateNewFiles(req *Request, sepOutput []string) *Request {
+	var i int32
+	newMap := make(map[string]filemap.File)
+	for i = 0; i < req.OpenAI.NCompletions; i++ {
+		newFileName := path.Join("generated-by-copilot-ops", ("generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"))
+		var newFile filemap.File
+		newFile.Content = sepOutput[i]
+		newFile.Path = newFileName
+		newFile.Tag = newFileName
+
+		newMap[newFileName] = newFile
+
+	}
+
+	req.Filemap.Files = newMap
+
+	return req
 }
