@@ -27,12 +27,13 @@ func (resp *OpenAIResponse) GetAllChoices() []string {
 func (resp *OpenAIResponse) GetNChoices(n int32) ([]string, error) {
 	var choices []string
 	var i int32
-	if len(resp.Choices) > 0 {
-		for i = 0; i < n; i++ {
-			choices = append(choices, resp.Choices[i].Text)
-		}
-		return choices, nil
+
+	if len(resp.Choices) == 0 {
+		return choices, fmt.Errorf("no choices found")
+	}
+	for i = 0; i < n; i++ {
+		choices = append(choices, resp.Choices[i].Text)
 	}
 
-	return choices, fmt.Errorf("no choices found")
+	return choices, nil
 }
