@@ -40,7 +40,7 @@ func NewGenerateCmd() *cobra.Command {
 	)
 
 	cmd.Flags().Int32P(
-		FLAG_NTOKENS, "n", 512,
+		FLAG_NTOKENS, "n", 4096,
 		"Max number of tokens to generate",
 	)
 
