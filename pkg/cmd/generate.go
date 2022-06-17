@@ -69,15 +69,18 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// print w/ escaped newlines
+	// Add separator to stringify output
+	stringOutput := "'" + strings.Join(output, "\n\n +----------------------------------------------------------+ \n\n")
+
+	// print stringified output w/ escaped newlines
 	if !r.IsWrite {
-		log.Printf("received output from OpenAI: %s", strings.ReplaceAll(output, "\\n", "\n"))
+		log.Printf("received output from OpenAI: %s", strings.ReplaceAll(stringOutput, "\\n", "\n"))
 	}
 
 	// err = r.Filemap.DecodeFromOutput(output)
 	r.Filemap = filemap.NewFilemap()
 	log.Printf("decoding output")
-	err = r.Filemap.DecodeFromOutput(output)
+	err = r.Filemap.DecodeFromOutput(stringOutput)
 	if err == nil {
 		return PrintOrWriteOut(r)
 	}
@@ -86,11 +89,8 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	log.Printf("decoding failed, got error: %s", err)
 	log.Printf("trying fallback")
 
-	// fallback - generate a new filename and put the content inside
-
-	outputSplit := strings.Split(output, "\n\n +----------------------------------------------------------+ \n\n")
-
-	r = generateNewFiles(r, outputSplit)
+	// fallback - generate new files and put the content inside
+	r = generateNewFiles(r, output)
 
 	return PrintOrWriteOut(r)
 }
