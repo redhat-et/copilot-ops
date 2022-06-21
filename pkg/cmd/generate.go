@@ -69,18 +69,13 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Add separator to stringify output
-	stringOutput := "'" + strings.Join(output, "\n\n +----------------------------------------------------------+ \n\n")
-
-	// print stringified output w/ escaped newlines
-	if !r.IsWrite {
-		log.Printf("received output from OpenAI: %s", strings.ReplaceAll(stringOutput, "\\n", "\n"))
-	}
-
-	// err = r.Filemap.DecodeFromOutput(output)
 	r.Filemap = filemap.NewFilemap()
 	log.Printf("decoding output")
-	err = r.Filemap.DecodeFromOutput(stringOutput)
+	for _, s := range output {
+		if err == nil {
+			err = r.Filemap.DecodeFromOutput(s)
+		}
+	}
 	if err == nil {
 		return PrintOrWriteOut(r)
 	}
