@@ -17,7 +17,10 @@ git clone https://github.com/redhat-et/copilot-ops.git
 
 # Build the binary
 make build
+```
+To install the command line tool, complete the following steps:
 
+```console
 # Create bin directory
 mkdir -p ${HOME}/bin
 
