@@ -5,7 +5,7 @@
 ## Requirements
 
 In order to use `copilot-ops`, you need to have an OpenAI account with access to the GPT-3 Codex model,
-and an API token saved as the `OPENAI_API_TOKEN` environment variable. You must also have golang installed to build the binary.
+and an API token saved as the `OPENAI_API_TOKEN` environment variable.
 
 ## Installation
 
@@ -27,17 +27,8 @@ mkdir -p ${HOME}/bin
 # Save binary to bin directory (run from copilot-ops directory)
 cp copilot-ops ${HOME}/bin
 
-# Make binary executable 
-chmod 755 ${HOME}/bin/copilot-ops
-
-# Open file ${HOME}/.bashrc in text editor, add line and save
-export PATH= "${HOME}/bin:${PATH}"
-
 # Rerun .bashrc file 
 . ~/.bashrc
-
-# Ensure binary is on PATH
-command -v copilot-ops
 
 # Run binary with -h to see all commands
 copilot-ops -h
