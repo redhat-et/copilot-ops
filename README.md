@@ -5,7 +5,7 @@
 ## Requirements
 
 In order to use `copilot-ops`, you need to have an OpenAI account with access to the GPT-3 Codex model,
-and an API token saved as the `OPENAI_API_TOKEN` environment variable.
+and an API token saved as the `OPENAI_API_KEY` environment variable.
 
 ## Installation
 
