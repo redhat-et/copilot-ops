@@ -9,7 +9,13 @@ and an API token saved as the `OPENAI_API_KEY` environment variable.
 
 ## Installation
 
-Installing `copilot-ops` is simple, simply clone this repository and `make build`:
+You can download a copilot-ops binary from our releases page:
+[binary releases](https://github.com/redhat-et/copilot-ops/releases/)
+
+Builds from the most recent commit are available in our CI workflows: [ci-builds](https://github.com/redhat-et/copilot-ops/actions/workflows/ci.yaml)
+
+
+If you prefer to build from source, simply clone this repository and `make build`:
 
 ```console
 # Clone the repository
