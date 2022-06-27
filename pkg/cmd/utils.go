@@ -68,7 +68,9 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	if len(files) > 0 {
 		log.Printf("loading files from command line: %v\n", files)
 		for _, glob := range files {
-			fm.LoadFilesFromGlob(glob)
+			// load or ignore failure
+			// FIXME: warn when a file has failed to load
+			_ = fm.LoadFilesFromGlob(glob)
 		}
 	}
 
@@ -80,7 +82,8 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 				return nil, fmt.Errorf("fileset %s not found in %s", name, CONFIG_FILE)
 			}
 			for _, glob := range fileset.Files {
-				fm.LoadFilesFromGlob(glob)
+				// FIXME: check error here
+				_ = fm.LoadFilesFromGlob(glob)
 			}
 		}
 	}

@@ -180,8 +180,8 @@ func (fm *Filemap) EncodeToInputTextFullPaths() (string, error) {
 	return input, nil
 }
 
-// ExtractTagName Extracts the tagname from the given content, providing its line number in the content, or an error if it doesn't exist.
-func ExtractTagName(content string) (string, int32, error) {
+// extractTagName Extracts the tagname from the given content, providing its line number in the content, or an error if it doesn't exist.
+func extractTagName(content string) (string, int32, error) {
 	// The tagname would be on a line in the format of: "# {FILE_TAG_PREFIX}tagname\n"
 	// We can split the line by the '#' character and then trim the leading and trailing whitespace.
 	lines := strings.Split(content, "\n")
@@ -256,7 +256,7 @@ func (fm *Filemap) DecodeFromOutput(content string) error {
 			continue
 		}
 		// The tagName should be the first line
-		tagName, lineNum, err := ExtractTagName(part)
+		tagName, lineNum, err := extractTagName(part)
 		if err != nil {
 			return err
 		}

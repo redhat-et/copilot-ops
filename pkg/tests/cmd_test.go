@@ -9,10 +9,6 @@ import (
 	"github.com/redhat-et/copilot-ops/pkg/cmd"
 )
 
-func init() {
-	os.Chdir("../../")
-}
-
 func TestGeneratePodForPVC(t *testing.T) {
 	t.Log(os.Getwd())
 	Run(t, []string{
@@ -40,7 +36,10 @@ func Run(t *testing.T, args []string) string {
 	buf := bytes.NewBufferString("")
 	cmd.SetOut(buf)
 	cmd.SetArgs(args)
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+
 	bytes, err := ioutil.ReadAll(buf)
 	if err != nil {
 		t.Fatal(err)
