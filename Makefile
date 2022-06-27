@@ -22,8 +22,8 @@ test: build
 lint: golangci-lint ## Lint source code
 	$(GOLANGCILINT) run ./...
 
-.PHONY: test
-test: lint ginkgo ## Run tests.
+# .PHONY: test
+# test: lint ginkgo ## Run tests.
 
 ##@ Build Dependencies
 

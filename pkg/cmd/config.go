@@ -29,8 +29,12 @@ type ConfigOpenAI struct {
 func (c *Config) Load() error {
 
 	// bind to environment variables
-	viper.BindEnv("openai.apikey", "OPENAI_API_KEY")
-	viper.BindEnv("openai.orgid", "OPENAI_ORG_ID")
+	if err := viper.BindEnv("openai.apikey", "OPENAI_API_KEY"); err != nil {
+		return err
+	}
+	if err := viper.BindEnv("openai.orgid", "OPENAI_ORG_ID"); err != nil {
+		return err
+	}
 	viper.SetEnvPrefix("COPILOT_OPS")
 	viper.AutomaticEnv()
 
