@@ -18,6 +18,7 @@ type OpenAIResponse struct {
 }
 
 type BodyParameters struct {
+	// Model is the model used by OpenAI to generate completions
 	Model string `json:"model"`
 	// Temperature Is the sampling temperature to use. Higher values means the model will take more risks. Try 0.9 for more creative applications, and 0 (argmax sampling) for ones with a well-defined answer.
 	Temperature float32 `json:"temperature,omitempty"`
@@ -27,7 +28,6 @@ type BodyParameters struct {
 // EditRequestBody Defines the parameters for the /edit endpoint.
 type EditRequestBody struct {
 	BodyParameters
-	Model       string `json:"model"`
 	Instruction string `json:"instruction"`
 	Input       string `json:"input,omitempty"`
 }
@@ -35,8 +35,6 @@ type EditRequestBody struct {
 // CompletionRequestBody Defines the body of data for requests that must be sent to the Completions endpoint.
 type CompletionRequestBody struct {
 	BodyParameters
-	// Model is the model used by OpenAI to generate completions
-	Model string `json:"model"`
 	// Prompt is the prompt to generate completions for, it can be encoded as a string, or as an array of strings.
 	Prompt string `json:"prompt"`
 	// Suffix is the suffix that comes after a completion of inserted text.

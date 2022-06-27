@@ -98,7 +98,9 @@ func (openAI *OpenAIClient) EditCode(input string, instruction string) (string, 
 	var editBody EditRequestBody = EditRequestBody{
 		Instruction: instruction,
 		Input:       input,
-		Model:       openAI.Engine,
+		BodyParameters: BodyParameters{
+			Model: openAI.Engine,
+		},
 	}
 
 	// make the request
@@ -133,9 +135,9 @@ func (openAI *OpenAIClient) GenerateCode(input string) ([]string, error) {
 		Stop:      []string{CompletionEndOfSequence},
 		MaxTokens: openAI.NTokens,
 		N:         openAI.NCompletions,
-		Model:     openAI.Engine,
 		BodyParameters: BodyParameters{
 			Temperature: 0,
+			Model:       openAI.Engine,
 		},
 	}
 
