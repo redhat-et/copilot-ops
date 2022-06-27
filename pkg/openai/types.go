@@ -18,6 +18,7 @@ type OpenAIResponse struct {
 }
 
 type BodyParameters struct {
+	Model string `json:"model"`
 	// Temperature Is the sampling temperature to use. Higher values means the model will take more risks. Try 0.9 for more creative applications, and 0 (argmax sampling) for ones with a well-defined answer.
 	Temperature float32 `json:"temperature,omitempty"`
 	TopP        int     `json:"top_p,omitempty"`
