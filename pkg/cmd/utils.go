@@ -98,6 +98,14 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	openAIClient.NTokens = nTokens
 	openAIClient.NCompletions = nCompletions
 
+	if cmd.Name() == COMMAND_EDIT {
+		openAIClient.Engine = openai.OpenAICodeDavinciEditV1
+	} else {
+		openAIClient.Engine = openai.OpenAICodeDavinciV2
+	}
+
+	println(openAIClient.Engine)
+
 	r := Request{
 		Config:      conf,
 		Filemap:     fm,

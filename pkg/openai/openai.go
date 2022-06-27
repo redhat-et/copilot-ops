@@ -59,7 +59,7 @@ func (openAI *OpenAIClient) MakeRequest(endpoint string, body interface{}) ([]by
 	bodyBytes := io.Reader(bytes.NewReader(jsonBody))
 
 	// build the request
-	apiURL := openAI.APIUrl + "/" + openAI.EnginePath() + "/" + endpoint
+	apiURL := openAI.APIUrl + "/" + endpoint
 	req, err := http.NewRequest("POST", apiURL, bodyBytes)
 	if err != nil {
 		return nil, err
@@ -98,6 +98,7 @@ func (openAI *OpenAIClient) EditCode(input string, instruction string) (string, 
 	var editBody EditRequestBody = EditRequestBody{
 		Instruction: instruction,
 		Input:       input,
+		Model:       openAI.Engine,
 	}
 
 	// make the request
@@ -132,6 +133,7 @@ func (openAI *OpenAIClient) GenerateCode(input string) ([]string, error) {
 		Stop:      []string{CompletionEndOfSequence},
 		MaxTokens: openAI.NTokens,
 		N:         openAI.NCompletions,
+		Model:     openAI.Engine,
 		BodyParameters: BodyParameters{
 			Temperature: 0,
 		},
