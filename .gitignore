@@ -11,3 +11,6 @@ last-processed.json
 
 # local env
 .copilot-ops.local.yaml
+
+# development files
+bin/

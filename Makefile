@@ -14,3 +14,31 @@ test: build
 	go vet ./...
 	@ echo ✅ go vet
 .PHONY: test
+
+
+##@ Development
+
+.PHONY: lint
+lint: golangci-lint ## Lint source code
+	$(GOLANGCILINT) run ./...
+
+.PHONY: test
+test: lint ginkgo ## Run tests.
+
+##@ Build Dependencies
+
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+##@ Download utilities
+
+# for performing lints
+.PHONY: golangci-lint
+GOLANGCILINT := $(LOCALBIN)/golangci-lint
+GOLANGCI_URL := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
+golangci-lint: $(GOLANGCILINT) ## Download golangci-lint
+$(GOLANGCILINT): $(LOCALBIN)
+	curl -sSfL $(GOLANGCI_URL) | sh -s -- -b $(LOCALBIN) $(GOLANGCI_VERSION)
+
