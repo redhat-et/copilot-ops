@@ -2,12 +2,16 @@
 package filemap
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/redhat-et/copilot-ops/pkg/openai"
 )
 
 // FILE Constants define the constant values that are used for parsing files.
@@ -26,6 +30,8 @@ type File struct {
 	Content string `json:"content"`
 	// Tag is the tagname of the file.
 	Tag string `json:"tag"`
+	// Name is the name of the file.
+	Name string `json:"name"`
 }
 
 // Filemap represents a mapping of files in a directory by their tagnames.
@@ -165,19 +171,49 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 }
 
 // EncodeToInputTextFullPaths Encodes the filemap into a string using each file's full path as its tagname.
-func (fm *Filemap) EncodeToInputTextFullPaths() (string, error) {
+func (fm *Filemap) EncodeToInputTextFullPaths(outputType string) (string, error) {
 	var input string = ""
 	var i int = 0
+	var GenFiles []openai.FileOutput
+
 	// join the files together along with their tag
 	for _, file := range fm.Files {
-		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, file.Path, file.Content)
+
+		sinFile := openai.FileOutput{
+			Name:     file.Name,
+			Path:     file.Path,
+			Contents: file.Content,
+		}
+
+		GenFiles = append(GenFiles, sinFile)
+
+		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, sinFile.Path, sinFile.Contents)
 		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
 			input += fmt.Sprintf("%s\n", FILE_DELIMETER)
 		}
 		i++
 	}
-	return input, nil
+
+	GeneratedFiles := openai.GeneratedFilesOutput{
+		GeneratedFiles: GenFiles,
+	}
+
+	genFilesOut, err := json.MarshalIndent(GeneratedFiles, "", "    ")
+	if err != nil {
+		return "", err
+	}
+
+	if outputType == "json" {
+		return string(genFilesOut), nil
+	} else if outputType == "plain" {
+		return input, nil
+	} else {
+		err = errors.New("invalid output type")
+		return "", err
+	}
+
+	//return string(genFilesOut), nil
 }
 
 // ExtractTagName Extracts the tagname from the given content, providing its line number in the content, or an error if it doesn't exist.

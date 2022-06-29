@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
@@ -18,6 +19,7 @@ type Request struct {
 	UserRequest string
 	IsWrite     bool
 	OpenAI      *openai.OpenAIClient
+	OutputType  string
 }
 
 func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
@@ -33,6 +35,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	filesets, _ := cmd.Flags().GetStringArray(FLAG_FILESETS)
 	nTokens, _ := cmd.Flags().GetInt32(FLAG_NTOKENS)
 	nCompletions, _ := cmd.Flags().GetInt32(FLAG_NCOMPLETIONS)
+	outputType, _ := cmd.Flags().GetString(FLAG_OUTPUTTYPE)
 
 	log.Printf("flags:\n")
 	log.Printf(" - %-8s: %v\n", FLAG_REQUEST, request)
@@ -42,6 +45,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	log.Printf(" - %-8s: %v\n", FLAG_FILESETS, filesets)
 	log.Printf(" - %-8s: %v\n", FLAG_NTOKENS, nTokens)
 	log.Printf(" - %-8s: %v\n", FLAG_NCOMPLETIONS, nCompletions)
+	log.Printf(" - %-8s: %v\n", FLAG_OUTPUTTYPE, outputType)
 
 	// Handle --path by changing the working directory
 	// so that every file name we refer to is relative to path
@@ -91,7 +95,10 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("decoded input: %q\n", filemapText)
+
+	stringOut := strings.ReplaceAll(string(filemapText), "\\n", "\n")
+
+	log.Printf("decoded input: \n%s\n", stringOut)
 
 	// create OpenAI client
 	openAIClient := openai.CreateOpenAIClient(conf.OpenAI.ApiKey, conf.OpenAI.OrgId, engine)
@@ -108,6 +115,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 		UserRequest: request,
 		IsWrite:     write,
 		OpenAI:      openAIClient,
+		OutputType:  outputType,
 	}
 
 	return &r, nil
@@ -130,11 +138,14 @@ func PrintOrWriteOut(r *Request) error {
 		// TODO: Add output formatting control
 		// just encode the output and print it to stdout
 		// TODO: print as redirectable / pipeable write stream
-		fmOutput, err := r.Filemap.EncodeToInputTextFullPaths()
+		fmOutput, err := r.Filemap.EncodeToInputTextFullPaths(r.OutputType)
 		if err != nil {
 			return err
 		}
-		log.Printf("\n%s\n", fmOutput)
+
+		stringOut := strings.ReplaceAll(string(fmOutput), "\\n", "\n")
+
+		log.Printf("\n%s\n", stringOut)
 		log.Printf("use --write to actually update files\n")
 	}
 
@@ -157,6 +168,11 @@ func AddRequestFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP(
 		FLAG_PATH, "p", ".",
 		"Path to the root of the repo",
+	)
+
+	cmd.Flags().StringP(
+		FLAG_OUTPUTTYPE, "o", "json",
+		"How to format output",
 	)
 
 }

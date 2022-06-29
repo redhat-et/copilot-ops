@@ -9,6 +9,7 @@ const (
 	FLAG_FILESETS     = "fileset"
 	FLAG_NTOKENS      = "ntokens"
 	FLAG_NCOMPLETIONS = "ncompletions"
+	FLAG_OUTPUTTYPE   = "output"
 )
 
 // COMMAND Constants which define the names of commands used in the CLI.

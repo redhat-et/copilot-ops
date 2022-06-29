@@ -132,3 +132,15 @@ type ErrorResponse struct {
 		Param   string  `json:"param"`
 	} `json:"error,omitempty"`
 }
+
+// FileOutput Defines a file object used to store generated file attributes.
+type FileOutput struct {
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	Contents string `json:"contents"`
+}
+
+// GeneratedFilesOutput Defines a list of all generated files.
+type GeneratedFilesOutput struct {
+	GeneratedFiles []FileOutput
+}
