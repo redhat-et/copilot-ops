@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
@@ -52,7 +53,9 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	log.Printf("received patch from OpenAI: %q\n", output)
+	stringOut := strings.ReplaceAll(string(output), "\\n", "\n")
+
+	log.Printf("received patch from OpenAI: \n%s\n", stringOut)
 
 	err = r.Filemap.DecodeFromOutput(output)
 	if err != nil {
