@@ -1,7 +1,9 @@
 // Package cmd defines the functions for the CLI.
 package cmd
 
-import fm "github.com/redhat-et/copilot-ops/pkg/filemap"
+import (
+	fm "github.com/redhat-et/copilot-ops/pkg/filemap"
+)
 
 // CmdResult represents the command results, warnings, and errors if
 // they exist. Warnings will not block a result from being returned, but errors will.
