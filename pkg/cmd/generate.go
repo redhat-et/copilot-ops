@@ -182,15 +182,15 @@ func generateNewFiles(req *Request, sepOutput []string) *Request {
 	var i int32
 	newMap := make(map[string]filemap.File)
 	for i = 0; i < req.OpenAI.NCompletions; i++ {
-		justFileName := "generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"
-		newFileName := path.Join("generated-by-copilot-ops", justFileName)
+		newFileName := "generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"
+		newFilePath := path.Join("generated-by-copilot-ops", newFileName)
 		var newFile filemap.File
 		newFile.Content = sepOutput[i]
-		newFile.Path = newFileName
-		newFile.Tag = newFileName
-		newFile.Name = justFileName
+		newFile.Path = newFilePath
+		newFile.Tag = newFilePath
+		newFile.Name = newFileName
 
-		newMap[newFileName] = newFile
+		newMap[newFilePath] = newFile
 
 	}
 

@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/redhat-et/copilot-ops/pkg/openai"
 )
 
 // FILE Constants define the constant values that are used for parsing files.
@@ -22,16 +20,22 @@ const (
 	FILE_TAG_PREFIX = "@"
 )
 
+// OUTPUT Constants define the values for all output options.
+const (
+	OutputJSON  = "json"
+	OutputPlain = "plain"
+)
+
 // File represents a file which was referenced in the issue to be updated.
 type File struct {
-	// Path is the path to the file.
-	Path string `json:"path"`
-	// Content is the content of the file.
-	Content string `json:"content"`
-	// Tag is the tagname of the file.
-	Tag string `json:"tag"`
 	// Name is the name of the file.
 	Name string `json:"name"`
+	// Path is the path to the file.
+	Path string `json:"path"`
+	// Tag is the tagname of the file.
+	Tag string `json:"tag"`
+	// Content is the content of the file.
+	Content string `json:"content"`
 }
 
 // Filemap represents a mapping of files in a directory by their tagnames.
@@ -174,20 +178,14 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 func (fm *Filemap) EncodeToInputTextFullPaths(outputType string) (string, error) {
 	var input string = ""
 	var i int = 0
-	var GenFiles []openai.FileOutput
+	var GenFiles []File
 
 	// join the files together along with their tag
 	for _, file := range fm.Files {
 
-		sinFile := openai.FileOutput{
-			Name:     file.Name,
-			Path:     file.Path,
-			Contents: file.Content,
-		}
+		GenFiles = append(GenFiles, file)
 
-		GenFiles = append(GenFiles, sinFile)
-
-		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, sinFile.Path, sinFile.Contents)
+		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, file.Path, file.Content)
 		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
 			input += fmt.Sprintf("%s\n", FILE_DELIMETER)
@@ -195,25 +193,29 @@ func (fm *Filemap) EncodeToInputTextFullPaths(outputType string) (string, error)
 		i++
 	}
 
-	GeneratedFiles := openai.GeneratedFilesOutput{
-		GeneratedFiles: GenFiles,
+	switch outputType {
+	case OutputJSON:
+		return GenerateJSON(GenFiles)
+	case OutputPlain:
+		return input, nil
+	default:
+		err := errors.New("invalid output type")
+		return "", err
+	}
+}
+
+// GenerateJSON generates json output from a given file array
+func GenerateJSON(input []File) (string, error) {
+	baseOutput := GeneratedFilesOutput{
+		GeneratedFiles: input,
 	}
 
-	genFilesOut, err := json.MarshalIndent(GeneratedFiles, "", "    ")
+	JSONoutput, err := json.MarshalIndent(baseOutput, "", "    ")
 	if err != nil {
 		return "", err
 	}
 
-	if outputType == "json" {
-		return string(genFilesOut), nil
-	} else if outputType == "plain" {
-		return input, nil
-	} else {
-		err = errors.New("invalid output type")
-		return "", err
-	}
-
-	//return string(genFilesOut), nil
+	return string(JSONoutput), err
 }
 
 // ExtractTagName Extracts the tagname from the given content, providing its line number in the content, or an error if it doesn't exist.
