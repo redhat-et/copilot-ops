@@ -9,6 +9,10 @@ import (
 	"github.com/redhat-et/copilot-ops/pkg/cmd"
 )
 
+func init() {
+	os.Chdir("../../")
+}
+
 func TestGeneratePodForPVC(t *testing.T) {
 	t.Log(os.Getwd())
 	Run(t, []string{
