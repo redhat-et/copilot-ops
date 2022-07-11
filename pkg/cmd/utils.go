@@ -18,34 +18,42 @@ type Request struct {
 	FilemapText string
 	UserRequest string
 	IsWrite     bool
-	OpenAI      *openai.OpenAIClient
+	OpenAI      *openai.Client
 	OutputType  string
 }
 
-func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
+func BuildOpenAIClient(conf Config, nTokens int32, nCompletions int32, engine string) *openai.Client {
+	// create OpenAI client
+	openAIClient := openai.CreateOpenAIClient(conf.OpenAI.APIKey, conf.OpenAI.OrgID, engine)
+	openAIClient.NTokens = nTokens
+	openAIClient.NCompletions = nCompletions
+	openAIClient.Engine = engine
+	return openAIClient
+}
 
-	request, _ := cmd.Flags().GetString(FLAG_REQUEST)
-	write, _ := cmd.Flags().GetBool(FLAG_WRITE)
-	path, _ := cmd.Flags().GetString(FLAG_PATH)
-	files, _ := cmd.Flags().GetStringArray(FLAG_FILES)
-	if cmd.Name() == COMMAND_EDIT {
-		file, _ := cmd.Flags().GetString(FLAG_FILES)
+func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
+	request, _ := cmd.Flags().GetString(FlagRequest)
+	write, _ := cmd.Flags().GetBool(FlagWrite)
+	path, _ := cmd.Flags().GetString(FlagPath)
+	files, _ := cmd.Flags().GetStringArray(FlagFiles)
+	if cmd.Name() == CommandEdit {
+		file, _ := cmd.Flags().GetString(FlagFiles)
 		files = append(files, file)
 	}
-	filesets, _ := cmd.Flags().GetStringArray(FLAG_FILESETS)
-	nTokens, _ := cmd.Flags().GetInt32(FLAG_NTOKENS)
-	nCompletions, _ := cmd.Flags().GetInt32(FLAG_NCOMPLETIONS)
-	outputType, _ := cmd.Flags().GetString(FLAG_OUTPUTTYPE)
+	filesets, _ := cmd.Flags().GetStringArray(FlagFilesets)
+	nTokens, _ := cmd.Flags().GetInt32(FlagNTokens)
+	nCompletions, _ := cmd.Flags().GetInt32(FlagNCompletions)
+	outputType, _ := cmd.Flags().GetString(FlagOutputType)
 
 	log.Printf("flags:\n")
-	log.Printf(" - %-8s: %v\n", FLAG_REQUEST, request)
-	log.Printf(" - %-8s: %v\n", FLAG_WRITE, write)
-	log.Printf(" - %-8s: %v\n", FLAG_PATH, path)
-	log.Printf(" - %-8s: %v\n", FLAG_FILES, files)
-	log.Printf(" - %-8s: %v\n", FLAG_FILESETS, filesets)
-	log.Printf(" - %-8s: %v\n", FLAG_NTOKENS, nTokens)
-	log.Printf(" - %-8s: %v\n", FLAG_NCOMPLETIONS, nCompletions)
-	log.Printf(" - %-8s: %v\n", FLAG_OUTPUTTYPE, outputType)
+	log.Printf(" - %-8s: %v\n", FlagRequest, request)
+	log.Printf(" - %-8s: %v\n", FlagWrite, write)
+	log.Printf(" - %-8s: %v\n", FlagPath, path)
+	log.Printf(" - %-8s: %v\n", FlagFiles, files)
+	log.Printf(" - %-8s: %v\n", FlagFilesets, filesets)
+	log.Printf(" - %-8s: %v\n", FlagNTokens, nTokens)
+	log.Printf(" - %-8s: %v\n", FlagNCompletions, nCompletions)
+	log.Printf(" - %-8s: %v\n", FlagOutputType, outputType)
 
 	// Handle --path by changing the working directory
 	// so that every file name we refer to is relative to path
@@ -83,7 +91,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 		for _, name := range filesets {
 			fileset := conf.FindFileset(name)
 			if fileset == nil {
-				return nil, fmt.Errorf("fileset %s not found in %s", name, CONFIG_FILE)
+				return nil, fmt.Errorf("fileset %s not found in %s", name, ConfigFile)
 			}
 			for _, glob := range fileset.Files {
 				// FIXME: check error here
@@ -99,16 +107,8 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 		return nil, err
 	}
 
-	stringOut := strings.ReplaceAll(string(filemapText), "\\n", "\n")
-
-	log.Printf("decoded input: \n%s\n", stringOut)
-
 	// create OpenAI client
-	openAIClient := openai.CreateOpenAIClient(conf.OpenAI.ApiKey, conf.OpenAI.OrgId, engine)
-	openAIClient.NTokens = nTokens
-	openAIClient.NCompletions = nCompletions
-	openAIClient.Engine = engine
-
+	openAIClient := BuildOpenAIClient(conf, nTokens, nCompletions, engine)
 	log.Printf("Model in use: " + openAIClient.Engine)
 
 	r := Request{
@@ -127,7 +127,6 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 // PrintOrWriteOut Accepts a request object and writes the contents of the filemap
 // to the disk if specified, otherwise it prints to STDOUT.
 func PrintOrWriteOut(r *Request) error {
-
 	// dump the state of the FileMap
 	r.Filemap.LogDump()
 
@@ -146,7 +145,7 @@ func PrintOrWriteOut(r *Request) error {
 			return err
 		}
 
-		stringOut := strings.ReplaceAll(string(fmOutput), "\\n", "\n")
+		stringOut := strings.ReplaceAll(fmOutput, "\\n", "\n")
 
 		log.Printf("\n%s\n", stringOut)
 		log.Printf("use --write to actually update files\n")
@@ -157,25 +156,23 @@ func PrintOrWriteOut(r *Request) error {
 
 // AddRequestFlags Appends flags to the given command which are then used at the command-line.
 func AddRequestFlags(cmd *cobra.Command) {
-
 	cmd.Flags().StringP(
-		FLAG_REQUEST, "r", "",
+		FlagRequest, "r", "",
 		"Requested changes in natural language (empty request will surprise you!)",
 	)
 
 	cmd.Flags().BoolP(
-		FLAG_WRITE, "w", false,
+		FlagWrite, "w", false,
 		"Write changes to the repo files (if not set the patch is printed to stdout)",
 	)
 
 	cmd.Flags().StringP(
-		FLAG_PATH, "p", ".",
+		FlagPath, "p", ".",
 		"Path to the root of the repo",
 	)
 
 	cmd.Flags().StringP(
-		FLAG_OUTPUTTYPE, "o", "json",
+		FlagOutputType, "o", "json",
 		"How to format output",
 	)
-
 }

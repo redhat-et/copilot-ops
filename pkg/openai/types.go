@@ -5,10 +5,10 @@ import "net/http"
 
 // EditResponse Represents the response body from OpenAI for requests to /edit.
 type EditResponse struct {
-	OpenAIResponse
+	Response
 }
 
-type OpenAIResponse struct {
+type Response struct {
 	Object  string `json:"object"`
 	Created uint64 `json:"created"`
 	Choices []struct {
@@ -20,7 +20,9 @@ type OpenAIResponse struct {
 type BodyParameters struct {
 	// Model is the model used by OpenAI to generate completions
 	Model string `json:"model"`
-	// Temperature Is the sampling temperature to use. Higher values means the model will take more risks. Try 0.9 for more creative applications, and 0 (argmax sampling) for ones with a well-defined answer.
+	// Temperature Is the sampling temperature to use. Higher values means
+	// the model will take more risks. Try 0.9 for more creative applications,
+	// and 0 (argmax sampling) for ones with a well-defined answer.
 	Temperature float32 `json:"temperature,omitempty"`
 	TopP        int     `json:"top_p,omitempty"`
 }
@@ -32,10 +34,12 @@ type EditRequestBody struct {
 	Input       string `json:"input,omitempty"`
 }
 
-// CompletionRequestBody Defines the body of data for requests that must be sent to the Completions endpoint.
+// CompletionRequestBody Defines the body of data for requests that must be
+// sent to the Completions endpoint.
 type CompletionRequestBody struct {
 	BodyParameters
-	// Prompt is the prompt to generate completions for, it can be encoded as a string, or as an array of strings.
+	// Prompt is the prompt to generate completions for, it can be encoded as
+	// a string, or as an array of strings.
 	Prompt string `json:"prompt"`
 	// Suffix is the suffix that comes after a completion of inserted text.
 	Suffix string `json:"suffix,omitempty"`
@@ -43,26 +47,33 @@ type CompletionRequestBody struct {
 	MaxTokens int32 `json:"max_tokens,omitempty"`
 	// N Is a number indicating how many completions should be generated for the given prompt.
 	N int32 `json:"n,omitempty"`
-	// Logprobs Is an integer which determines how many log probabilities OpenAI will return for its most likely tokens.
+	// Logprobs Is an integer which determines how many log probabilities OpenAI will
+	// return for its most likely tokens.
 	// Maximum is 5.
 	Logprobs int32 `json:"logprobs,omitempty"`
 	// Echo is a boolean indicating whether we want to echo the prompt in addition to the completion.
 	Echo bool `json:"echo,omitempty"`
 	// Stop Is a list of up to 4 sequences where the API will stop generating further tokens.
 	Stop []string `json:"stop,omitempty"`
-	// PresencePenalty Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+	// PresencePenalty Number between -2.0 and 2.0. Positive values penalize new
+	// tokens based on whether they appear in the text so far, increasing the model's
+	// likelihood to talk about new topics.
 	PresencePenalty float32 `json:"presence_penalty,omitempty"`
-	// FrequencyPenalty Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+	// FrequencyPenalty Number between -2.0 and 2.0. Positive values penalize new
+	// tokens based on their existing frequency in the text so far, decreasing the
+	// model's likelihood to repeat the same line verbatim.
 	FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
-	// BestOf Generates best_of completions server-side and returns the "best" (the one with the lowest log probability per token). Results cannot be streamed.
+	// BestOf Generates best_of completions server-side and returns the "best" (the one with the lowest
+	// log probability per token). Results cannot be streamed.
 	BestOf int `json:"best_of,omitempty"`
 	// User Is a string which uniquely identifies a user performing the completions.
 	User string `json:"user,omitempty"`
 }
 
-// CompletionResponse Is the object returned from OpenAI after a successful request has been made to /completions
+// CompletionResponse Is the object returned from OpenAI after a successful
+// request has been made to /completions.
 type CompletionResponse struct {
-	OpenAIResponse
+	Response
 	// ID Is a string which uniquely identifies this completion for OpenAI.
 	ID string `json:"id,omitempty"`
 	// Model Identifies the model that was used in order to make this completion.
@@ -79,13 +90,16 @@ type SearchRequestBody struct {
 	// File Is the path to a file containing documents to search against.
 	// If this is specified then Documents must be omitted.
 	File string `json:"file,omitempty"`
-	// MaxRerank Is the maximum number of documents to be re-ranked and returned from search.
+	// MaxRerank Is the maximum number of documents to be re-ranked
+	// and returned from search.
 	MaxRerank int32 `json:"max_rerank,omitempty"`
 	// ReturnMetadata A special boolean flag for showing metadata.
-	// If set to true, each document entry in the returned JSON will contain a "metadata" field.
+	// If set to true, each document entry in the returned JSON will
+	// contain a "metadata" field.
 	// This flag only takes effect when file is set.
 	ReturnMetadata bool `json:"return_metadata,omitempty"`
-	// User Is a unique identifier representing your end-user, which will help OpenAI to monitor and detect abuse.
+	// User Is a unique identifier representing your end-user, which will
+	// help OpenAI to monitor and detect abuse.
 	User string `json:"user,omitempty"`
 }
 
@@ -104,22 +118,27 @@ type SearchResponseBody struct {
 	Object string `json:"object"`
 }
 
-// OpenAIClient Defines the client for interacting with the OpenAI API
-type OpenAIClient struct {
+// Client Defines the client for interacting with the OpenAI API.
+type Client struct {
 	// Client is the HTTP client used to perform requests to the OpenAI API.
 	Client *http.Client
-	// APIUrl Defines the endpoint that the client will use to interact with the OpenAI API.
+	// APIUrl Defines the endpoint that the client will use to interact with
+	// the OpenAI API.
 	APIUrl string
 	// Engine represents the engine used when getting completions from OpenAI.
-	// TODO: Create a constant enumeration of engines so that we can include their character limits.
+	// TODO: Create a constant enumeration of engines so that we can include
+	// their character limits.
 	Engine string
 	// AuthToken is the token used to authenticate with the OpenAI API.
 	AuthToken string
-	// OrganizationID is the ID of the organization used to authenticate with the OpenAI API.
+	// OrganizationID is the ID of the organization used to authenticate with
+	// the OpenAI API.
 	OrganizationID string
-	// NTokens Is an integer representing the maximum number of tokens to generate in the completion.
+	// NTokens Is an integer representing the maximum number of tokens to
+	// generate in the completion.
 	NTokens int32
-	// NCompletions is an integer representing the maximum number of completions to generate from a prompt.
+	// NCompletions is an integer representing the maximum number of completions
+	// to generate from a prompt.
 	NCompletions int32
 }
 

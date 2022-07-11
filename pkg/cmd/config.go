@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"log"
 
 	"github.com/spf13/viper"
 )
 
-const CONFIG_FILE = ".copilot-ops.yaml"
+const ConfigFile = ".copilot-ops.yaml"
 
 type Config struct {
 	Filesets []ConfigFilesets
@@ -19,15 +20,14 @@ type ConfigFilesets struct {
 }
 
 type ConfigOpenAI struct {
-	ApiKey string
-	OrgId  string
+	APIKey string
+	OrgID  string
 }
 
 // Load the config from file if it exists, but if it doesn't exist
 // we'll just use the defaults and continue without error.
 // Errors here might return if the file exists but is invalid.
 func (c *Config) Load() error {
-
 	// bind to environment variables
 	if err := viper.BindEnv("openai.apikey", "OPENAI_API_KEY"); err != nil {
 		return err
@@ -48,7 +48,8 @@ func (c *Config) Load() error {
 	viper.SetConfigName(".copilot-ops") // name of config file (without extension)
 
 	if err := viper.MergeInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		var configFileNotFound *viper.ConfigFileNotFoundError
+		if ok := errors.As(err, &configFileNotFound); !ok {
 			return err // allow no config file
 		}
 	}
@@ -59,7 +60,8 @@ func (c *Config) Load() error {
 	viper.SetConfigName(".copilot-ops.local")
 
 	if err := viper.MergeInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		var configFileNotFound *viper.ConfigFileNotFoundError
+		if ok := errors.As(err, &configFileNotFound); !ok {
 			return err // allow no config file
 		}
 	}

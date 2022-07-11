@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Execute the CLI and exit
+// Execute the CLI and exit.
 func Execute() {
 	err := NewRootCmd().Execute()
 	if err != nil {
