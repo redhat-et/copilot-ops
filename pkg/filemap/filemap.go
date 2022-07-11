@@ -12,15 +12,15 @@ import (
 	"strings"
 )
 
-// FILE Constants define the constant values that are used for parsing files.
+// Define the values that are used for parsing files.
 const (
-	// FILE_DELIMETER Is the string used to separate files when encoding/decoding.
-	FILE_DELIMETER = "==="
-	// FILE_TAG_PREFIX Is a string that indicates that the following string is the file's tag.
-	FILE_TAG_PREFIX = "@"
+	// FileDelimeter Is the string used to separate files when encoding/decoding.
+	FileDelimeter = "==="
+	// FileTagPrefix Is a string that indicates that the following string is the file's tag.
+	FileTagPrefix = "@"
 )
 
-// OUTPUT Constants define the values for all output options.
+// Defines the values for all output options.
 const (
 	OutputJSON  = "json"
 	OutputPlain = "plain"
@@ -49,11 +49,12 @@ func NewFilemap() *Filemap {
 	}
 }
 func (fm *Filemap) LogDump() {
+	maxShown := 30
 	log.Printf("filemap: len %d\n", len(fm.Files))
 	for _, f := range fm.Files {
 		l := len(f.Content)
-		if l > 30 {
-			l = 30
+		if l > maxShown {
+			l = maxShown
 		}
 		short := strings.ReplaceAll(f.Content[:l], "\n", " ")
 		log.Printf(" - tag: %-10q: path: %-20q [%s ...] len %d\n", f.Tag, f.Path, short, len(f.Content))
@@ -69,7 +70,7 @@ func (fm *Filemap) LoadFile(path string) error {
 	}
 	if _, ok := fm.Files[tag]; ok {
 		tag = fmt.Sprintf("%s#%d", tag, len(fm.Files))
-		if _, ok := fm.Files[tag]; ok {
+		if _, ok = fm.Files[tag]; ok {
 			return fmt.Errorf("File tag conflict %s", tag)
 		}
 	}
@@ -89,7 +90,7 @@ func (fm *Filemap) LoadFilesFromGlob(glob string) error {
 	}
 	log.Printf("LoadFilesFromGlob %q - matches %v\n", glob, matches)
 	for _, match := range matches {
-		err := fm.LoadFile(match)
+		err = fm.LoadFile(match)
 		if err != nil {
 			return err
 		}
@@ -111,7 +112,7 @@ func (fm *Filemap) WriteUpdatesToFiles() error {
 		dirPath := filepath.Dir(file.Path)
 		// create the directory if it does not exist
 		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
-			err := os.MkdirAll(dirPath, 0755)
+			err = os.MkdirAll(dirPath, 0755)
 			if err != nil {
 				return err
 			}
@@ -129,7 +130,6 @@ func (fm *Filemap) WriteUpdatesToFiles() error {
 		if err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
@@ -160,14 +160,14 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 				name: my-sql-pod
 				namespace: default
 	*/
-	var input string = ""
-	var i int = 0
+	var input = ""
+	var i int
 	// join the files together along with their tag
 	for tagname, file := range fm.Files {
-		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, tagname, file.Content)
+		input += fmt.Sprintf("# %s%s\n%s\n", FileTagPrefix, tagname, file.Content)
 		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
-			input += fmt.Sprintf("%s\n", FILE_DELIMETER)
+			input += fmt.Sprintf("%s\n", FileDelimeter)
 		}
 		i++
 	}
@@ -176,26 +176,24 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 
 // EncodeToInputTextFullPaths Encodes the filemap into a string using each file's full path as its tagname.
 func (fm *Filemap) EncodeToInputTextFullPaths(outputType string) (string, error) {
-	var input string = ""
-	var i int = 0
-	var GenFiles []File
+	var input = ""
+	var i = 0
+	var genFiles []File
 
 	// join the files together along with their tag
 	for _, file := range fm.Files {
-
-		GenFiles = append(GenFiles, file)
-
-		input += fmt.Sprintf("# %s%s\n%s\n", FILE_TAG_PREFIX, file.Path, file.Content)
+		genFiles = append(genFiles, file)
+		input += fmt.Sprintf("# %s%s\n%s\n", FileTagPrefix, file.Path, file.Content)
 		// insert a delimeter between each file, but not after the last file
 		if 1 < len(fm.Files) && i < len(fm.Files)-1 {
-			input += fmt.Sprintf("%s\n", FILE_DELIMETER)
+			input += fmt.Sprintf("%s\n", FileDelimeter)
 		}
 		i++
 	}
 
 	switch outputType {
 	case OutputJSON:
-		return GenerateJSON(GenFiles)
+		return GenerateJSON(genFiles)
 	case OutputPlain:
 		return input, nil
 	default:
@@ -204,21 +202,22 @@ func (fm *Filemap) EncodeToInputTextFullPaths(outputType string) (string, error)
 	}
 }
 
-// GenerateJSON generates json output from a given file array
+// GenerateJSON generates json output from a given file array.
 func GenerateJSON(input []File) (string, error) {
 	baseOutput := GeneratedFilesOutput{
 		GeneratedFiles: input,
 	}
 
-	JSONoutput, err := json.MarshalIndent(baseOutput, "", "    ")
+	jsonOutput, err := json.MarshalIndent(baseOutput, "", "    ")
 	if err != nil {
 		return "", err
 	}
 
-	return string(JSONoutput), err
+	return string(jsonOutput), err
 }
 
-// extractTagName Extracts the tagname from the given content, providing its line number in the content, or an error if it doesn't exist.
+// extractTagName Extracts the tagname from the given content,
+// providing its line number in the content, or an error if it doesn't exist.
 func extractTagName(content string) (string, int32, error) {
 	// The tagname would be on a line in the format of: "# {FILE_TAG_PREFIX}tagname\n"
 	// We can split the line by the '#' character and then trim the leading and trailing whitespace.
@@ -227,7 +226,7 @@ func extractTagName(content string) (string, int32, error) {
 	// search content for regex of the following pattern: /#\s*\{FILE_TAG_PREFIX}(.+)/g
 	// if found, return the tagname
 	// if not found, return an error
-	pattern := fmt.Sprintf(`#\s*\%s(.+)`, FILE_TAG_PREFIX)
+	pattern := fmt.Sprintf(`#\s*\%s(.+)`, FileTagPrefix)
 	regexPattern, err := regexp.Compile(pattern)
 	if err != nil {
 		return "", 0, err
@@ -249,7 +248,7 @@ func ConcatenateAfterLineNum(content string, lineNum int32) (string, error) {
 	if lineNum >= int32(len(lines)) {
 		return "", fmt.Errorf("line number %d exceeds number of lines in content", lineNum)
 	}
-	var output string = ""
+	var output = ""
 	for i := lineNum + 1; i < int32(len(lines)); i++ {
 		output += lines[i] + "\n"
 	}
@@ -283,14 +282,12 @@ func (fm *Filemap) DecodeFromOutput(content string) error {
 	// If the tagname is not found, we assume that the file is new and we will create a new file with the tagname.
 
 	// Split the content by the file delimeter
-	parts := strings.Split(content, FILE_DELIMETER)
-	fmt.Printf("num parts: %d\n", len(parts))
+	parts := strings.Split(content, FileDelimeter)
 	for _, part := range parts {
 		// Trim the leading and trailing whitespace
 		part = strings.TrimSpace(part)
 		// If the part is empty, skip it
 		if part == "" {
-			fmt.Printf("part is empty, skipping\n")
 			continue
 		}
 		// The tagName should be the first line
@@ -300,12 +297,12 @@ func (fm *Filemap) DecodeFromOutput(content string) error {
 		}
 
 		// grab the content following the lineNum
-		content, err := ConcatenateAfterLineNum(part, lineNum)
+		concatenatedContent, err := ConcatenateAfterLineNum(part, lineNum)
 		if err != nil {
 			return err
 		}
 		// add to the filemap
-		fm.AddContentByTag(tagName, content)
+		fm.AddContentByTag(tagName, concatenatedContent)
 	}
 	return nil
 }

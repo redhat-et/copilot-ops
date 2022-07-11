@@ -1,19 +1,25 @@
 package cmd
 
-// FLAG Constants which define the names of flags used in commands.
+// Define the names of flags used in commands.
 const (
-	FLAG_REQUEST      = "request"
-	FLAG_WRITE        = "write"
-	FLAG_PATH         = "path"
-	FLAG_FILES        = "file"
-	FLAG_FILESETS     = "fileset"
-	FLAG_NTOKENS      = "ntokens"
-	FLAG_NCOMPLETIONS = "ncompletions"
-	FLAG_OUTPUTTYPE   = "output"
+	FlagRequest      = "request"
+	FlagWrite        = "write"
+	FlagPath         = "path"
+	FlagFiles        = "file"
+	FlagFilesets     = "fileset"
+	FlagNTokens      = "ntokens"
+	FlagNCompletions = "ncompletions"
+	FlagOutputType   = "output"
 )
 
 // COMMAND Constants which define the names of commands used in the CLI.
 const (
-	COMMAND_EDIT     = "edit"
-	COMMAND_GENERATE = "generate"
+	CommandEdit     = "edit"
+	CommandGenerate = "generate"
+)
+
+// Miscellaneous constants used in the CLI.
+const (
+	DefaultTokens      = 512
+	DefaultCompletions = 1
 )

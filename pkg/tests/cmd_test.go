@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"bytes"
@@ -8,10 +8,6 @@ import (
 
 	"github.com/redhat-et/copilot-ops/pkg/cmd"
 )
-
-func init() {
-	os.Chdir("../../")
-}
 
 func TestGeneratePodForPVC(t *testing.T) {
 	t.Log(os.Getwd())
@@ -24,7 +20,8 @@ func TestGeneratePodForPVC(t *testing.T) {
 	})
 }
 
-// TestEditPVCSize
+// TestEditPVCSize Tests that the edit command can successfully change the size of a PVC YAML
+// to be 100Gi.
 func TestEditPVCSize(t *testing.T) {
 	Run(t, []string{
 		"edit",

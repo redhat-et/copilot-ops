@@ -5,23 +5,23 @@ import (
 	fm "github.com/redhat-et/copilot-ops/pkg/filemap"
 )
 
-// CmdResult represents the command results, warnings, and errors if
+// Result represents the command results, warnings, and errors if
 // they exist. Warnings will not block a result from being returned, but errors will.
-type CmdResult struct {
-	Error    *CmdError     `json:"error"`
-	Warnings *[]CmdError   `json:"warnings"`
+type Result struct {
+	Error    *Error        `json:"error"`
+	Warnings *[]Error      `json:"warnings"`
 	Result   *[]fm.Filemap `json:"result"`
 }
 
-// CmdError represents an error or warning from within the program
+// Error represents an error or warning from within the program
 // which has taken place during the execution of the CLI.
-type CmdError struct {
+type Error struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Data    error  `json:"data"`
 }
 
-type CmdWarning struct {
+type Warning struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Data    error  `json:"data"`
