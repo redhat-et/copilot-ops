@@ -5,7 +5,7 @@ build:
 	@ echo ./copilot-ops -h "# run me!"
 .PHONY: build
 
-test: build
+test: build lint
 	@ echo ▶️ go test
 	go clean -testcache ./...
 	go test -v ./...
