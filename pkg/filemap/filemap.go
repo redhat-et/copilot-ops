@@ -43,11 +43,14 @@ type Filemap struct {
 	Files map[string]File `json:"files"`
 }
 
+// NewFilemap Builds and returns a new filemap.
 func NewFilemap() *Filemap {
 	return &Filemap{
 		Files: make(map[string]File),
 	}
 }
+
+// LogDump Displays the contents of the filemap to the log.
 func (fm *Filemap) LogDump() {
 	maxShown := 30
 	log.Printf("filemap: len %d\n", len(fm.Files))
@@ -136,7 +139,7 @@ func (fm *Filemap) WriteUpdatesToFiles() error {
 
 // EncodeToInputText Encodes the filemap into a string which can be used as input to the OpenAI CLI.
 // If there was some issue or problem encoding the filemap, an error will be returned.
-func (fm *Filemap) EncodeToInputText() (string, error) {
+func (fm *Filemap) EncodeToInputText() string {
 	/*
 		This function will encode the file contents as a string,
 		with each file prepended by a hashtag, followed by its tagname.
@@ -171,7 +174,7 @@ func (fm *Filemap) EncodeToInputText() (string, error) {
 		}
 		i++
 	}
-	return input, nil
+	return input
 }
 
 // EncodeToInputTextFullPaths Encodes the filemap into a string using each file's full path as its tagname.
@@ -243,6 +246,9 @@ func extractTagName(content string) (string, int32, error) {
 
 // ConcatenateAfterLineNum Concatenates all of the content following the given lineNum.
 // If the lineNum exceeds the number of lines in the content, an error will be returned.
+//
+// The line numbers are zero-indexed, so passing -1 will concatenate all of the content,
+// whereas 0 will exclude the first line.
 func ConcatenateAfterLineNum(content string, lineNum int32) (string, error) {
 	lines := strings.Split(content, "\n")
 	if lineNum >= int32(len(lines)) {
@@ -301,6 +307,11 @@ func (fm *Filemap) DecodeFromOutput(content string) error {
 		if err != nil {
 			return err
 		}
+		// ignore empty files
+		if strings.TrimSpace(concatenatedContent) == "" {
+			continue
+		}
+
 		// add to the filemap
 		fm.AddContentByTag(tagName, concatenatedContent)
 	}

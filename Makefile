@@ -5,16 +5,6 @@ build:
 	@ echo ./copilot-ops -h "# run me!"
 .PHONY: build
 
-test: build lint
-	@ echo ▶️ go test
-	go clean -testcache ./...
-	go test -v ./...
-	@ echo ✅ go test
-	@ echo ▶️ go vet
-	go vet ./...
-	@ echo ✅ go vet
-.PHONY: test
-
 
 ##@ Development
 
@@ -24,8 +14,11 @@ lint: golangci-lint ## Lint source code
 	$(GOLANGCILINT) run ./...
 	@ echo "✅ golangci-lint run"
 
-# .PHONY: test
-# test: lint ginkgo ## Run tests.
+.PHONY: test
+test: lint ginkgo ## Run tests.
+	@ echo "▶️ ginkgo test"
+	$(GINKGO) --coverprofile "cover.out" ./...
+	@ echo "✅ ginkgo test"
 
 ##@ Build Dependencies
 
@@ -42,5 +35,14 @@ GOLANGCILINT := $(LOCALBIN)/golangci-lint
 GOLANGCI_URL := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
 golangci-lint: $(GOLANGCILINT) ## Download golangci-lint
 $(GOLANGCILINT): $(LOCALBIN)
+	@ echo "▶️ Downloading golangci-lint"
 	curl -sSfL $(GOLANGCI_URL) | sh -s -- -b $(LOCALBIN) $(GOLANGCI_VERSION)
+	@ echo "✅ Downloading golangci-lint"
 
+.PHONY: ginkgo
+GINKGO := $(LOCALBIN)/ginkgo
+ginkgo: $(GINKGO) ## Download ginkgo
+$(GINKGO): $(LOCALBIN)
+	@ echo "▶️ Downloading ginkgo@v2"
+	GOBIN=$(LOCALBIN) go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
+	@ echo "✅ Downloaded ginkgo"

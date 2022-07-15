@@ -101,11 +101,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	}
 
 	fm.LogDump()
-
-	filemapText, err := fm.EncodeToInputText()
-	if err != nil {
-		return nil, err
-	}
+	filemapText := fm.EncodeToInputText()
 
 	// create OpenAI client
 	openAIClient := BuildOpenAIClient(conf, nTokens, nCompletions, engine)
