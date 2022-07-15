@@ -75,6 +75,8 @@ func (c *Config) Load() error {
 	return nil
 }
 
+// FindFileset Returns a fileset with the matching name,
+// or nil if none exists.
 func (c *Config) FindFileset(name string) *ConfigFilesets {
 	for _, fileset := range c.Filesets {
 		if fileset.Name == name {
