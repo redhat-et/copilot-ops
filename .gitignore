@@ -14,3 +14,6 @@ last-processed.json
 
 # development files
 bin/
+
+# coverage files should be generated within CI
+cover.out
