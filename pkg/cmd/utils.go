@@ -128,8 +128,6 @@ func PrintOrWriteOut(r *Request) error {
 		return nil
 	}
 
-	// TODO: Add output formatting control
-	// just encode the output and print it to stdout
 	// TODO: print as redirectable / pipeable write stream
 	fmOutput, err := r.Filemap.EncodeToInputTextFullPaths(r.OutputType)
 	if err != nil {
