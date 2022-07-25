@@ -61,7 +61,6 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	input := PrepareGenerateInput(r.UserRequest, r.FilemapText)
 	log.Printf("requesting generate from OpenAI: %s", input)
 

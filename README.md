@@ -1,5 +1,7 @@
 # copilot-ops
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/redhat-et/copilot-ops)](https://goreportcard.com/report/github.com/redhat-et/copilot-ops)
+
 `copilot-ops` is a CLI tool that boosts up any "devops repo" to a ninja level of *Artificially Intelligent Ops Repo*.
 
 ## Requirements
