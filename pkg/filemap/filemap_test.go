@@ -32,12 +32,10 @@ kind: CatVideos
 				"fortnite_vods": {
 					Path:    "./testdata/fortnite_vods",
 					Content: content1,
-					Tag:     "fortnite_vods",
 				},
 				"cat_videos": {
 					Path:    "./testdata/cat_videos",
 					Content: content2,
-					Tag:     "cat_videos",
 				},
 			}
 		})

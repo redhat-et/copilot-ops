@@ -68,9 +68,10 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	// generate a response from OpenAI
 	output, err := r.OpenAI.GenerateCode(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("got error from OpenAI: %w", err)
 	}
 
+	// decode the response
 	r.Filemap = filemap.NewFilemap()
 	log.Printf("decoding output")
 	for _, s := range output {
@@ -78,16 +79,15 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 			err = r.Filemap.DecodeFromOutput(s)
 		}
 	}
+
 	if err == nil {
 		return PrintOrWriteOut(r)
 	}
 
 	// HACK: try other way to decode the output to a fileset
 	log.Printf("decoding failed, got error: %s", err)
-	log.Printf("trying fallback")
-
 	// fallback - generate new files and put the content inside
-	r = generateNewFiles(r, output)
+	generateNewFiles(r, output)
 
 	return PrintOrWriteOut(r)
 }
@@ -178,23 +178,23 @@ func callToActionSequence(request string, encodedFiles string) string {
 	return prompt
 }
 
-// Create a new file for every requested completion and store them in the "generated-by-copilot-ops" directory.
-func generateNewFiles(req *Request, sepOutput []string) *Request {
+// generateNewFiles Creates a new file for every requested completion,
+// and stores them in the "generated-by-copilot-ops" directory.
+func generateNewFiles(req *Request, sepOutput []string) {
 	var i int32
 	newMap := make(map[string]filemap.File)
 	for i = 0; i < req.OpenAI.NCompletions; i++ {
+		// set file name + path here
 		newFileName := "generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"
 		newFilePath := path.Join("generated-by-copilot-ops", newFileName)
+
 		var newFile filemap.File
 		newFile.Content = sepOutput[i]
 		newFile.Path = newFilePath
-		newFile.Tag = newFilePath
 		newFile.Name = newFileName
 
 		newMap[newFilePath] = newFile
 	}
 
 	req.Filemap.Files = newMap
-
-	return req
 }

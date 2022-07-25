@@ -67,10 +67,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	// we'll just use the defaults and continue without error.
 	// Errors here might return if the file exists but is invalid.
 	conf := Config{}
-	err := conf.Load()
-	if err != nil {
-		return nil, err
-	}
+	_ = conf.Load()
 
 	// WARNING we should not consider printing conf with its secret keys
 	log.Printf("Filesets: %+v\n", conf.Filesets)
@@ -123,29 +120,23 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 // PrintOrWriteOut Accepts a request object and writes the contents of the filemap
 // to the disk if specified, otherwise it prints to STDOUT.
 func PrintOrWriteOut(r *Request) error {
-	// dump the state of the FileMap
-	r.Filemap.LogDump()
-
 	if r.IsWrite {
-		log.Printf("updating files ...\n")
 		err := r.Filemap.WriteUpdatesToFiles()
 		if err != nil {
 			return err
 		}
-	} else {
-		// TODO: Add output formatting control
-		// just encode the output and print it to stdout
-		// TODO: print as redirectable / pipeable write stream
-		fmOutput, err := r.Filemap.EncodeToInputTextFullPaths(r.OutputType)
-		if err != nil {
-			return err
-		}
-
-		stringOut := strings.ReplaceAll(fmOutput, "\\n", "\n")
-
-		log.Printf("\n%s\n", stringOut)
-		log.Printf("use --write to actually update files\n")
+		return nil
 	}
+
+	// TODO: Add output formatting control
+	// just encode the output and print it to stdout
+	// TODO: print as redirectable / pipeable write stream
+	fmOutput, err := r.Filemap.EncodeToInputTextFullPaths(r.OutputType)
+	if err != nil {
+		return err
+	}
+	stringOut := strings.ReplaceAll(fmOutput, "\\n", "\n")
+	log.Printf("\n%s\n", stringOut)
 
 	return nil
 }

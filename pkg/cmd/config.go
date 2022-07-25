@@ -59,13 +59,7 @@ func (c *Config) Load() error {
 	// optionally look for local (gitignored) config file and merge it in
 	viper.SetConfigName(".copilot-ops.local")
 
-	if err := viper.MergeInConfig(); err != nil {
-		var configFileNotFound *viper.ConfigFileNotFoundError
-		if ok := errors.As(err, &configFileNotFound); !ok {
-			return err // allow no config file
-		}
-	}
-
+	_ = viper.MergeInConfig()
 	log.Printf("viper: %+v\n", viper.ConfigFileUsed())
 
 	if err := viper.Unmarshal(c); err != nil {

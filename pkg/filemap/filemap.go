@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -32,8 +31,6 @@ type File struct {
 	Name string `json:"name"`
 	// Path is the path to the file.
 	Path string `json:"path"`
-	// Tag is the tagname of the file.
-	Tag string `json:"tag"`
 	// Content is the content of the file.
 	Content string `json:"content"`
 }
@@ -54,13 +51,13 @@ func NewFilemap() *Filemap {
 func (fm *Filemap) LogDump() {
 	maxShown := 30
 	log.Printf("filemap: len %d\n", len(fm.Files))
-	for _, f := range fm.Files {
+	for tag, f := range fm.Files {
 		l := len(f.Content)
 		if l > maxShown {
 			l = maxShown
 		}
 		short := strings.ReplaceAll(f.Content[:l], "\n", " ")
-		log.Printf(" - tag: %-10q: path: %-20q [%s ...] len %d\n", f.Tag, f.Path, short, len(f.Content))
+		log.Printf(" - tag: %-10q: path: %-20q [%s ...] len %d\n", tag, f.Path, short, len(f.Content))
 	}
 }
 
@@ -80,7 +77,6 @@ func (fm *Filemap) LoadFile(path string) error {
 	fm.Files[tag] = File{
 		Path:    path,
 		Content: string(bytes),
-		Tag:     tag,
 	}
 	return nil
 }
@@ -103,14 +99,14 @@ func (fm *Filemap) LoadFilesFromGlob(glob string) error {
 
 // WriteUpdatesToFiles Writes the updated contents of each file to the directory.
 func (fm *Filemap) WriteUpdatesToFiles() error {
-	for _, file := range fm.Files {
+	for tag, file := range fm.Files {
 		// add extension if necessary, assume this is YAML for the time being
 		// HACK: classify the relevant extension (e.g. .yaml, .yml, .json)
 		// fileName := file.Tag
 		// if len(strings.Split(file.Tag, ".")) == 1 {
 		// 	fileName += ".yaml"
 		// }
-		log.Printf("path: %q, tag: %q\n", file.Path, file.Tag)
+		log.Printf("path: %q, tag: %q\n", file.Path, tag)
 		// locate the base directory of filePath
 		dirPath := filepath.Dir(file.Path)
 		// create the directory if it does not exist
@@ -219,31 +215,6 @@ func GenerateJSON(input []File) (string, error) {
 	return string(jsonOutput), err
 }
 
-// extractTagName Extracts the tagname from the given content,
-// providing its line number in the content, or an error if it doesn't exist.
-func extractTagName(content string) (string, int32, error) {
-	// The tagname would be on a line in the format of: "# {FILE_TAG_PREFIX}tagname\n"
-	// We can split the line by the '#' character and then trim the leading and trailing whitespace.
-	lines := strings.Split(content, "\n")
-
-	// search content for regex of the following pattern: /#\s*\{FILE_TAG_PREFIX}(.+)/g
-	// if found, return the tagname
-	// if not found, return an error
-	pattern := fmt.Sprintf(`#\s*\%s(.+)`, FileTagPrefix)
-	regexPattern, err := regexp.Compile(pattern)
-	if err != nil {
-		return "", 0, err
-	}
-
-	for i, line := range lines {
-		// find the first line that matches the pattern
-		if match := regexPattern.FindStringSubmatch(line); match != nil {
-			return strings.TrimSpace(match[1]), int32(i), nil
-		}
-	}
-	return "", -1, fmt.Errorf("no tagname found in content")
-}
-
 // ConcatenateAfterLineNum Concatenates all of the content following the given lineNum.
 // If the lineNum exceeds the number of lines in the content, an error will be returned.
 //
@@ -275,7 +246,6 @@ func (fm *Filemap) AddContentByTag(tagname string, content string) {
 			// TODO: infer path
 			Path:    "",
 			Content: content,
-			Tag:     tagname,
 		}
 	}
 }
