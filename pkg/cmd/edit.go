@@ -28,7 +28,7 @@ func NewEditCmd() *cobra.Command {
 
 	// flag to add a file
 	cmd.Flags().StringP(
-		FlagFiles, "f", "",
+		FlagFilesFull, FlagFilesShort, "",
 		"File path to the document which should be edited.",
 	)
 

@@ -33,29 +33,29 @@ func NewGenerateCmd() *cobra.Command {
 
 	// generate-specific flags
 	cmd.Flags().StringArrayP(
-		FlagFiles, "f", []string{},
+		FlagFilesFull, FlagFilesShort, []string{},
 		"File paths (glob) to be considered for the patch (can be specified multiple times)",
 	)
 
 	cmd.Flags().StringArrayP(
-		FlagFilesets, "s", []string{},
+		FlagFilesetsFull, FlagFilesShort, []string{},
 		"Fileset names (defined in "+ConfigFile+") to be considered for the patch (can be specified multiple times)",
 	)
 
 	cmd.Flags().Int32P(
-		FlagNTokens, "n", DefaultTokens,
+		FlagNTokensFull, FlagNTokensShort, DefaultTokens,
 		"Max number of tokens to generate",
 	)
 
 	cmd.Flags().Int32P(
-		FlagNCompletions, "c", DefaultCompletions,
+		FlagNCompletionsFull, FlagNCompletionsShort, DefaultCompletions,
 		"Number of completions to generate",
 	)
 
 	return cmd
 }
 
-// RunGenerate is the implementation of the `copilot-ops patch` command.
+// RunGenerate is the implementation of the `copilot-ops generate` command.
 func RunGenerate(cmd *cobra.Command, args []string) error {
 	r, err := PrepareRequest(cmd, openai.OpenAICodeDavinciV2)
 	if err != nil {

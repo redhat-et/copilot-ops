@@ -32,28 +32,28 @@ func BuildOpenAIClient(conf Config, nTokens int32, nCompletions int32, engine st
 }
 
 func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
-	request, _ := cmd.Flags().GetString(FlagRequest)
-	write, _ := cmd.Flags().GetBool(FlagWrite)
-	path, _ := cmd.Flags().GetString(FlagPath)
-	files, _ := cmd.Flags().GetStringArray(FlagFiles)
+	request, _ := cmd.Flags().GetString(FlagRequestFull)
+	write, _ := cmd.Flags().GetBool(FlagWriteFull)
+	path, _ := cmd.Flags().GetString(FlagPathFull)
+	files, _ := cmd.Flags().GetStringArray(FlagFilesFull)
 	if cmd.Name() == CommandEdit {
-		file, _ := cmd.Flags().GetString(FlagFiles)
+		file, _ := cmd.Flags().GetString(FlagFilesFull)
 		files = append(files, file)
 	}
-	filesets, _ := cmd.Flags().GetStringArray(FlagFilesets)
-	nTokens, _ := cmd.Flags().GetInt32(FlagNTokens)
-	nCompletions, _ := cmd.Flags().GetInt32(FlagNCompletions)
-	outputType, _ := cmd.Flags().GetString(FlagOutputType)
+	filesets, _ := cmd.Flags().GetStringArray(FlagFilesetsFull)
+	nTokens, _ := cmd.Flags().GetInt32(FlagNTokensFull)
+	nCompletions, _ := cmd.Flags().GetInt32(FlagNCompletionsFull)
+	outputType, _ := cmd.Flags().GetString(FlagOutputTypeFull)
 
 	log.Printf("flags:\n")
-	log.Printf(" - %-8s: %v\n", FlagRequest, request)
-	log.Printf(" - %-8s: %v\n", FlagWrite, write)
-	log.Printf(" - %-8s: %v\n", FlagPath, path)
-	log.Printf(" - %-8s: %v\n", FlagFiles, files)
-	log.Printf(" - %-8s: %v\n", FlagFilesets, filesets)
-	log.Printf(" - %-8s: %v\n", FlagNTokens, nTokens)
-	log.Printf(" - %-8s: %v\n", FlagNCompletions, nCompletions)
-	log.Printf(" - %-8s: %v\n", FlagOutputType, outputType)
+	log.Printf(" - %-8s: %v\n", FlagRequestFull, request)
+	log.Printf(" - %-8s: %v\n", FlagWriteFull, write)
+	log.Printf(" - %-8s: %v\n", FlagPathFull, path)
+	log.Printf(" - %-8s: %v\n", FlagFilesFull, files)
+	log.Printf(" - %-8s: %v\n", FlagFilesetsFull, filesets)
+	log.Printf(" - %-8s: %v\n", FlagNTokensFull, nTokens)
+	log.Printf(" - %-8s: %v\n", FlagNCompletionsFull, nCompletions)
+	log.Printf(" - %-8s: %v\n", FlagOutputTypeFull, outputType)
 
 	// Handle --path by changing the working directory
 	// so that every file name we refer to is relative to path
@@ -142,22 +142,22 @@ func PrintOrWriteOut(r *Request) error {
 // AddRequestFlags Appends flags to the given command which are then used at the command-line.
 func AddRequestFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP(
-		FlagRequest, "r", "",
+		FlagRequestFull, FlagRequestShort, "",
 		"Requested changes in natural language (empty request will surprise you!)",
 	)
 
 	cmd.Flags().BoolP(
-		FlagWrite, "w", false,
+		FlagWriteFull, FlagWriteShort, false,
 		"Write changes to the repo files (if not set the patch is printed to stdout)",
 	)
 
 	cmd.Flags().StringP(
-		FlagPath, "p", ".",
+		FlagPathFull, FlagPathShort, ".",
 		"Path to the root of the repo",
 	)
 
 	cmd.Flags().StringP(
-		FlagOutputType, "o", "json",
+		FlagOutputTypeFull, FlagOutputTypeShort, "json",
 		"How to format output",
 	)
 }
