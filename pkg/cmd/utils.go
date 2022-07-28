@@ -20,17 +20,23 @@ type Request struct {
 	IsWrite     bool
 	OpenAI      *openai.Client
 	OutputType  string
+	OpenAIURL   string
 }
 
-func BuildOpenAIClient(conf Config, nTokens int32, nCompletions int32, engine string) *openai.Client {
+// BuildOpenAIClient Creates and configures an OpenAI client based on the given parameters.
+func BuildOpenAIClient(conf Config, nTokens int32, nCompletions int32, engine string, openAIURL string) *openai.Client {
 	// create OpenAI client
-	openAIClient := openai.CreateOpenAIClient(conf.OpenAI.APIKey, conf.OpenAI.OrgID, engine)
+	openAIClient := openai.CreateOpenAIClient()
 	openAIClient.NTokens = nTokens
 	openAIClient.NCompletions = nCompletions
 	openAIClient.Engine = engine
+	// allow override of OpenAI URL for testing
+	openAIClient.APIUrl = openAIURL + openai.OpenAIEndpointV1
 	return openAIClient
 }
 
+// PrepareRequest Processes the user input along with provided environment variables,
+// creating a Request object which is used for context in further requests.
 func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	request, _ := cmd.Flags().GetString(FlagRequestFull)
 	write, _ := cmd.Flags().GetBool(FlagWriteFull)
@@ -44,6 +50,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	nTokens, _ := cmd.Flags().GetInt32(FlagNTokensFull)
 	nCompletions, _ := cmd.Flags().GetInt32(FlagNCompletionsFull)
 	outputType, _ := cmd.Flags().GetString(FlagOutputTypeFull)
+	openAIURL, _ := cmd.Flags().GetString(FlagOpenAIURLFull)
 
 	log.Printf("flags:\n")
 	log.Printf(" - %-8s: %v\n", FlagRequestFull, request)
@@ -101,7 +108,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	filemapText := fm.EncodeToInputText()
 
 	// create OpenAI client
-	openAIClient := BuildOpenAIClient(conf, nTokens, nCompletions, engine)
+	openAIClient := BuildOpenAIClient(conf, nTokens, nCompletions, engine, openAIURL)
 	log.Printf("Model in use: " + openAIClient.Engine)
 
 	r := Request{
@@ -159,5 +166,12 @@ func AddRequestFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP(
 		FlagOutputTypeFull, FlagOutputTypeShort, "json",
 		"How to format output",
+	)
+
+	_ = cmd.Flags().StringP(
+		FlagOpenAIURLFull,
+		FlagOpenAIURLShort,
+		openai.OpenAIURL,
+		"Domain of the OpenAI API",
 	)
 }

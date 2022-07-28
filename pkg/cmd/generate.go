@@ -38,7 +38,7 @@ func NewGenerateCmd() *cobra.Command {
 	)
 
 	cmd.Flags().StringArrayP(
-		FlagFilesetsFull, FlagFilesShort, []string{},
+		FlagFilesetsFull, FlagFilesetsShort, []string{},
 		"Fileset names (defined in "+ConfigFile+") to be considered for the patch (can be specified multiple times)",
 	)
 

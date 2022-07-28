@@ -13,15 +13,11 @@ import (
 
 // CreateOpenAIClient Creates a client to perform requests to OpenAI based on the provided
 // API token and organization ID.
-func CreateOpenAIClient(authToken string, organizationID string, engine string) *Client {
+func CreateOpenAIClient() *Client {
 	return &Client{
 		Client: &http.Client{
 			Timeout: time.Minute,
 		},
-		APIUrl:         OpenAIEndpointV1,
-		Engine:         engine,
-		AuthToken:      authToken,
-		OrganizationID: organizationID,
 	}
 }
 

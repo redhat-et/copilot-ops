@@ -8,15 +8,20 @@ type EditResponse struct {
 	Response
 }
 
-type Response struct {
-	Object  string `json:"object"`
-	Created uint64 `json:"created"`
-	Choices []struct {
-		Text  string `json:"text"`
-		Index int    `json:"index"`
-	} `json:"choices"`
+// Choice is a single choice returned by OpenAI.
+type Choice struct {
+	Text  string `json:"text"`
+	Index int    `json:"index"`
 }
 
+// Response Defines a response object from OpenAI.
+type Response struct {
+	Object  string   `json:"object"`
+	Created uint64   `json:"created"`
+	Choices []Choice `json:"choices"`
+}
+
+// BodyParameters Define a set of parameters for the body of OpenAI requests.
 type BodyParameters struct {
 	// Model is the model used by OpenAI to generate completions
 	Model string `json:"model"`
