@@ -16,6 +16,8 @@ const (
 	FlagNTokensShort      = "n"
 	FlagNCompletionsFull  = "ncompletions"
 	FlagNCompletionsShort = "c"
+	FlagOpenAIURLFull     = "openai-url"
+	FlagOpenAIURLShort    = "d"
 	FlagOutputTypeFull    = "output"
 	FlagOutputTypeShort   = "o"
 )
