@@ -30,11 +30,12 @@ jobs:
         with:
           go-version: 1.18
       - run: make test
-        name: Run Tests
+        name: Run tests and generate coverage report
         shell: bash
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./cover.out
+          fail_ci_if_error: true
       - run: go vet -v ./...
   build-all:
     runs-on: ubuntu-latest
