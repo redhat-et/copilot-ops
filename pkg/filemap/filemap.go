@@ -51,13 +51,13 @@ func NewFilemap() *Filemap {
 func (fm *Filemap) LogDump() {
 	maxShown := 30
 	log.Printf("filemap: len %d\n", len(fm.Files))
-	for tag, f := range fm.Files {
+	for name, f := range fm.Files {
 		l := len(f.Content)
 		if l > maxShown {
 			l = maxShown
 		}
 		short := strings.ReplaceAll(f.Content[:l], "\n", " ")
-		log.Printf(" - tag: %-10q: path: %-20q [%s ...] len %d\n", tag, f.Path, short, len(f.Content))
+		log.Printf(" - tag: %-10q: path: %-20q [%s ...] len %d\n", name, f.Path, short, len(f.Content))
 	}
 }
 
@@ -99,14 +99,14 @@ func (fm *Filemap) LoadFilesFromGlob(glob string) error {
 
 // WriteUpdatesToFiles Writes the updated contents of each file to the directory.
 func (fm *Filemap) WriteUpdatesToFiles() error {
-	for tag, file := range fm.Files {
+	for name, file := range fm.Files {
 		// add extension if necessary, assume this is YAML for the time being
 		// HACK: classify the relevant extension (e.g. .yaml, .yml, .json)
 		// fileName := file.Tag
 		// if len(strings.Split(file.Tag, ".")) == 1 {
 		// 	fileName += ".yaml"
 		// }
-		log.Printf("path: %q, tag: %q\n", file.Path, tag)
+		log.Printf("path: %q, tag: %q\n", file.Path, name)
 		// locate the base directory of filePath
 		dirPath := filepath.Dir(file.Path)
 		// create the directory if it does not exist
