@@ -1,6 +1,8 @@
 package cmd_test
 
 import (
+	"log"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -12,6 +14,11 @@ var _ = Describe("Root command", func() {
 		It("contains edit and generate", func() {
 			rootCmd := cmd.NewRootCmd()
 			Expect(rootCmd).NotTo(BeNil())
+		})
+	})
+	Describe("Edit command", func() {
+		It("hello world", func() {
+			log.Println("hello")
 		})
 	})
 })
