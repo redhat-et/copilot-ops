@@ -74,7 +74,9 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	// we'll just use the defaults and continue without error.
 	// Errors here might return if the file exists but is invalid.
 	conf := Config{}
-	_ = conf.Load()
+	if err := conf.Load(); err != nil {
+		return nil, err
+	}
 
 	// WARNING we should not consider printing conf with its secret keys
 	log.Printf("Filesets: %+v\n", conf.Filesets)

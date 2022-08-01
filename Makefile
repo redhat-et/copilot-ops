@@ -46,3 +46,11 @@ $(GINKGO): $(LOCALBIN)
 	@ echo "▶️ Downloading ginkgo@v2"
 	GOBIN=$(LOCALBIN) go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
 	@ echo "✅ Downloaded ginkgo"
+
+
+##@ Build Dependencies
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	@ echo "▶️ Local binary directory not present, creating..."
+	mkdir -p $(LOCALBIN)
+	@ echo "✅ Local binary directory created"
