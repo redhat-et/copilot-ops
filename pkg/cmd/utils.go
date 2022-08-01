@@ -1,37 +1,40 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strings"
 
+	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
-	"github.com/redhat-et/copilot-ops/pkg/openai"
+	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
 
 type Request struct {
-	Config      Config
-	Fileset     *ConfigFilesets
-	Filemap     *filemap.Filemap
-	FilemapText string
-	UserRequest string
-	IsWrite     bool
-	OpenAI      *openai.Client
-	OutputType  string
-	OpenAIURL   string
+	Config       config.Config
+	Fileset      *config.ConfigFilesets
+	Filemap      *filemap.Filemap
+	FilemapText  string
+	UserRequest  string
+	IsWrite      bool
+	OpenAI       *gogpt.Client
+	OutputType   string
+	OpenAIURL    string
+	NTokens      int32
+	NCompletions int32
 }
 
+const (
+	openAIV1Endpoint = "/v1"
+	openAIURL        = "https://api.openai.com"
+)
+
 // BuildOpenAIClient Creates and configures an OpenAI client based on the given parameters.
-func BuildOpenAIClient(conf Config, nTokens int32, nCompletions int32, engine string, openAIURL string) *openai.Client {
+func BuildOpenAIClient(conf config.Config, nTokens int32, nCompletions int32, engine string, url string) *gogpt.Client {
 	// create OpenAI client
-	openAIClient := openai.CreateOpenAIClient()
-	openAIClient.NTokens = nTokens
-	openAIClient.NCompletions = nCompletions
-	openAIClient.Engine = engine
-	// allow override of OpenAI URL for testing
-	openAIClient.APIUrl = openAIURL + openai.OpenAIEndpointV1
+	openAIClient := gogpt.NewOrgClient(conf.OpenAI.APIKey, conf.OpenAI.OrgID)
+	openAIClient.BaseURL = url + openAIV1Endpoint
 	return openAIClient
 }
 
@@ -83,44 +86,32 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 
 	fm := filemap.NewFilemap()
 
-	if len(files) > 0 {
-		log.Printf("loading files from command line: %v\n", files)
-		for _, glob := range files {
-			// load or ignore failure
-			// FIXME: warn when a file has failed to load
-			_ = fm.LoadFilesFromGlob(glob)
-		}
+	log.Printf("loading files from command line: %v\n", files)
+	if err := fm.LoadFiles(files); err != nil {
+		log.Fatalf("error loading files: %s\n", err.Error())
 	}
 
 	if len(filesets) > 0 {
-		log.Printf("detected filesets: %v\n", filesets)
-		for _, name := range filesets {
-			fileset := conf.FindFileset(name)
-			if fileset == nil {
-				return nil, fmt.Errorf("fileset %s not found in %s", name, ConfigFile)
-			}
-			for _, glob := range fileset.Files {
-				// FIXME: check error here
-				_ = fm.LoadFilesFromGlob(glob)
-			}
-		}
+		log.Printf("loading filesets: %v\n", filesets)
+	}
+	if err := fm.LoadFilesets(filesets, conf, config.ConfigFile); err != nil {
+		log.Fatalf("error loading filesets: %s\n", err.Error())
 	}
 
-	fm.LogDump()
 	filemapText := fm.EncodeToInputText()
 
 	// create OpenAI client
 	openAIClient := BuildOpenAIClient(conf, nTokens, nCompletions, engine, openAIURL)
-	log.Printf("Model in use: " + openAIClient.Engine)
-
 	r := Request{
-		Config:      conf,
-		Filemap:     fm,
-		FilemapText: filemapText,
-		UserRequest: request,
-		IsWrite:     write,
-		OpenAI:      openAIClient,
-		OutputType:  outputType,
+		Config:       conf,
+		Filemap:      fm,
+		FilemapText:  filemapText,
+		UserRequest:  request,
+		IsWrite:      write,
+		OpenAI:       openAIClient,
+		OutputType:   outputType,
+		NTokens:      nTokens,
+		NCompletions: nCompletions,
 	}
 
 	return &r, nil
@@ -173,7 +164,7 @@ func AddRequestFlags(cmd *cobra.Command) {
 	_ = cmd.Flags().StringP(
 		FlagOpenAIURLFull,
 		FlagOpenAIURLShort,
-		openai.OpenAIURL,
-		"Domain of the OpenAI API",
+		openAIURL+openAIV1Endpoint,
+		"OpenAI URL",
 	)
 }

@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 )
 
 // Define the values that are used for parsing files.
@@ -284,6 +286,35 @@ func (fm *Filemap) DecodeFromOutput(content string) error {
 
 		// add to the filemap
 		fm.AddContentByTag(tagName, concatenatedContent)
+	}
+	return nil
+}
+
+// loadFiles attempts to load the given files by globbing.
+func (fm *Filemap) LoadFiles(files []string) error {
+	for _, glob := range files {
+		// load or ignore failure
+		// FIXME: warn when a file has failed to load
+		if err := fm.LoadFilesFromGlob(glob); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// LoadFilesets Attempts to populate the filemap from the given filesets.
+func (fm *Filemap) LoadFilesets(filesets []string, conf config.Config, configFile string) error {
+	for _, name := range filesets {
+		fileset := conf.FindFileset(name)
+		if fileset == nil {
+			return fmt.Errorf("fileset %s not found in %s", name, configFile)
+		}
+		for _, glob := range fileset.Files {
+			// FIXME: check error here
+			if err := fm.LoadFilesFromGlob(glob); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

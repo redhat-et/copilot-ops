@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"path"
 	"strings"
 
+	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
+	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +42,7 @@ func NewGenerateCmd() *cobra.Command {
 
 	cmd.Flags().StringArrayP(
 		FlagFilesetsFull, FlagFilesetsShort, []string{},
-		"Fileset names (defined in "+ConfigFile+") to be considered for the patch (can be specified multiple times)",
+		"Fileset names (defined in "+config.ConfigFile+") to be considered for the patch (can be specified multiple times)",
 	)
 
 	cmd.Flags().Int32P(
@@ -65,7 +68,19 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	log.Printf("requesting generate from OpenAI: %s", input)
 
 	// generate a response from OpenAI
-	output, err := r.OpenAI.GenerateCode(input)
+	model := openai.OpenAICodeDavinciV2
+	resp, err := r.OpenAI.CreateCompletion(
+		context.TODO(),
+		openai.OpenAICodeDavinciV2,
+		gogpt.CompletionRequest{
+			Model:       &model,
+			Prompt:      input,
+			MaxTokens:   int(r.NTokens),
+			N:           int(r.NCompletions),
+			Temperature: 0.0,
+			Stop:        []string{openai.CompletionEndOfSequence},
+		},
+	)
 	if err != nil {
 		return fmt.Errorf("got error from OpenAI: %w", err)
 	}
@@ -73,9 +88,9 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	// decode the response
 	r.Filemap = filemap.NewFilemap()
 	log.Printf("decoding output")
-	for _, s := range output {
+	for _, s := range resp.Choices {
 		if err == nil {
-			err = r.Filemap.DecodeFromOutput(s)
+			err = r.Filemap.DecodeFromOutput(s.Text)
 		}
 	}
 
@@ -86,7 +101,7 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	// HACK: try other way to decode the output to a fileset
 	log.Printf("decoding failed, got error: %s", err)
 	// fallback - generate new files and put the content inside
-	generateNewFiles(r, output)
+	generateNewFiles(r, resp.Choices)
 
 	return PrintOrWriteOut(r)
 }
@@ -179,16 +194,15 @@ func callToActionSequence(request string, encodedFiles string) string {
 
 // generateNewFiles Creates a new file for every requested completion,
 // and stores them in the "generated-by-copilot-ops" directory.
-func generateNewFiles(req *Request, sepOutput []string) {
-	var i int32
+func generateNewFiles(req *Request, sepOutput []gogpt.CompletionChoice) {
 	newMap := make(map[string]filemap.File)
-	for i = 0; i < req.OpenAI.NCompletions; i++ {
+	for i := 0; i < len(sepOutput); i++ {
 		// set file name + path here
 		newFileName := "generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"
 		newFilePath := path.Join("generated-by-copilot-ops", newFileName)
 
 		var newFile filemap.File
-		newFile.Content = sepOutput[i]
+		newFile.Content = sepOutput[i].Text
 		newFile.Path = newFilePath
 		newFile.Name = newFileName
 

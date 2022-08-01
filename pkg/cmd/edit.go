@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/redhat-et/copilot-ops/pkg/openai"
+	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
 
@@ -47,15 +47,23 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 		" format used to identify the YAML(s).", filemap.FileTagPrefix)
 	editInstruction := fmt.Sprintf("%s\n\n%s", r.UserRequest, editSuffix)
 
-	output, err := r.OpenAI.EditCode(r.FilemapText, editInstruction)
+	// create a client for editing
+	model := openai.OpenAICodeDavinciEditV1
+	response, err := r.OpenAI.Edits(
+		context.TODO(),
+		gogpt.EditsRequest{
+			Model:       &model,
+			Input:       r.FilemapText,
+			Instruction: editInstruction,
+			// FIXME: edit more than one file
+			N:           1,
+			Temperature: 0.0,
+		},
+	)
 	if err != nil {
 		return err
 	}
-
-	stringOut := strings.ReplaceAll(output, "\\n", "\n")
-
-	log.Printf("received patch from OpenAI: \n%s\n", stringOut)
-
+	output := response.Choices[0].Text
 	err = r.Filemap.DecodeFromOutput(output)
 	if err != nil {
 		return err

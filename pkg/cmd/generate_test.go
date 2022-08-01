@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"log"
 	"net/http/httptest"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -29,6 +30,7 @@ var _ = Describe("Generate command", func() {
 
 		JustBeforeEach(func() {
 			ts.Start()
+			log.Println("using server URL: ", ts.URL)
 			err := c.Flags().Set(cmd.FlagOpenAIURLFull, ts.URL)
 			Expect(err).To(BeNil())
 		})
