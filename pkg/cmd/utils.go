@@ -76,7 +76,7 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	// Load the config from file if it exists, but if it doesn't exist
 	// we'll just use the defaults and continue without error.
 	// Errors here might return if the file exists but is invalid.
-	conf := Config{}
+	conf := config.Config{}
 	if err := conf.Load(); err != nil {
 		return nil, err
 	}
