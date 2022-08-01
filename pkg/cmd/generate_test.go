@@ -33,7 +33,7 @@ var _ = Describe("Generate command", func() {
 			Expect(err).To(BeNil())
 		})
 		AfterEach(func() {
-			defer ts.Close()
+			ts.Close()
 		})
 
 		It("executes properly", func() {
