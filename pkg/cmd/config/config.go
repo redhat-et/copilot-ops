@@ -14,13 +14,13 @@ type Config struct {
 	OpenAI   ConfigOpenAI
 }
 
-// nolint:revive // FIXME: refactor this
+//nolint:revive // FIXME: refactor this
 type ConfigFilesets struct {
 	Name  string
 	Files []string
 }
 
-// nolint:revive // FIXME: refactor this
+//nolint:revive // FIXME: refactor this
 type ConfigOpenAI struct {
 	APIKey string
 	OrgID  string

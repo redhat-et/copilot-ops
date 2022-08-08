@@ -5,6 +5,15 @@ build:
 	@ echo ./copilot-ops -h "# run me!"
 .PHONY: build
 
+image:
+	docker build -t quay.io/copilot-ops/copilot-ops .
+	@ echo ✅ docker build
+.PHONY: image
+
+publish: image
+	docker push quay.io/copilot-ops/copilot-ops
+	@ echo ✅ docker push
+.PHONY: publish
 
 ##@ Development
 

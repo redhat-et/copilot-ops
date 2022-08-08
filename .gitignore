@@ -14,6 +14,7 @@ last-processed.json
 
 # development files
 bin/
+.vscode
 
 # coverage files should be generated within CI
 cover.out
