@@ -21,7 +21,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a
 # Use minimal base image to package the binary
 FROM registry.access.redhat.com/ubi9-minimal
 WORKDIR /
+RUN microdnf install git -y && microdnf clean all
 COPY --from=builder /workspace/copilot-ops .
+
 # USER 65532:65532
 
 ENTRYPOINT ["/copilot-ops"]
