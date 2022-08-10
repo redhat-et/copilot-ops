@@ -6,17 +6,11 @@
 	<img alt="copilot-ops-logo" src="./public/copilot-ops-logo.png" width="300" height="300" />
 </p>
 
-<!-- the below header uses a zero-width whitespace character taken from: https://unicode-table.com/en/200B/
-in order to force markdown to render a thin-line
-This is because the top header forces a thin line after
-the text, but the '---' and <hr> methods of getting a horizontal line create a line with a different thickness.
- -->
 <p align="center">
 <a href="https://goreportcard.com/report/github.com/redhat-et/copilot-ops">
 	<img src="https://goreportcard.com/badge/github.com/redhat-et/copilot-ops" alt="copilot-ops Go report badge">
 </a>
 </p>
-<h1>​</h1>
 
 ## About
 `copilot-ops` is a CLI tool that boosts up any "devops repo" to a ninja level of *Artificially Intelligent Ops Repo*.
