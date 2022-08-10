@@ -7,10 +7,15 @@
 </p>
 
 <p align="center">
-<a href="https://goreportcard.com/report/github.com/redhat-et/copilot-ops">
-	<img src="https://goreportcard.com/badge/github.com/redhat-et/copilot-ops" alt="copilot-ops Go report badge">
-</a>
+	<a href="https://goreportcard.com/report/github.com/redhat-et/copilot-ops">
+		<img src="https://goreportcard.com/badge/github.com/redhat-et/copilot-ops" alt="copilot-ops Go report badge">
+	</a>
+	<a href="https://codecov.io/gh/redhat-et/copilot-ops" > 
+		<img src="https://codecov.io/gh/redhat-et/copilot-ops/branch/main/graph/badge.svg?token=3SNBJAXSVS"/> 
+	</a>
 </p>
+
+
 
 ## About
 `copilot-ops` is a CLI tool that boosts up any "devops repo" to a ninja level of *Artificially Intelligent Ops Repo*.
