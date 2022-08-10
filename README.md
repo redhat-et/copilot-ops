@@ -1,10 +1,5 @@
 <h1 align="center">copilot-ops</h1>
 
-<p align="center">
-<a href="https://goreportcard.com/report/github.com/redhat-et/copilot-ops">
-	<img src="https://goreportcard.com/badge/github.com/redhat-et/copilot-ops" alt="copilot-ops Go report badge">
-</a>
-</p>
 
 
 <p align="center">
@@ -16,6 +11,11 @@ in order to force markdown to render a thin-line
 This is because the top header forces a thin line after
 the text, but the '---' and <hr> methods of getting a horizontal line create a line with a different thickness.
  -->
+<p align="center">
+<a href="https://goreportcard.com/report/github.com/redhat-et/copilot-ops">
+	<img src="https://goreportcard.com/badge/github.com/redhat-et/copilot-ops" alt="copilot-ops Go report badge">
+</a>
+</p>
 <h1>​</h1>
 
 ## About
