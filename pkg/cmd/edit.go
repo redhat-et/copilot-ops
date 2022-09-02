@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
+	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
-	"github.com/redhat-et/copilot-ops/pkg/openai"
 	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
@@ -37,7 +36,7 @@ func NewEditCmd() *cobra.Command {
 
 // RunEdit Runs when the `edit` command is invoked.
 func RunEdit(cmd *cobra.Command, args []string) error {
-	r, err := PrepareRequest(cmd, openai.OpenAICodeDavinciEditV1)
+	r, err := PrepareRequest(cmd)
 	if err != nil {
 		return err
 	}
@@ -48,10 +47,9 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 	editInstruction := fmt.Sprintf("%s\n\n%s", r.UserRequest, editSuffix)
 
 	// create a client for editing
-	model := openai.OpenAICodeDavinciEditV1
-	response, err := r.OpenAI.Edits(
-		context.TODO(),
-		gogpt.EditsRequest{
+	model := gpt3.OpenAICodeDavinciEditV1
+	responses, err := r.AIClient.Edit(
+		gpt3.EditParams{Params: gogpt.EditsRequest{
 			Model:       &model,
 			Input:       r.FilemapText,
 			Instruction: editInstruction,
@@ -59,11 +57,12 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 			N:           1,
 			Temperature: 0.0,
 		},
+		},
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not edit files: %w", err)
 	}
-	output := response.Choices[0].Text
+	output := responses[0]
 	err = r.Filemap.DecodeFromOutput(output)
 	if err != nil {
 		return err

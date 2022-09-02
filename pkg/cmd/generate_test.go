@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/cobra"
 
+	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	"github.com/redhat-et/copilot-ops/pkg/cmd"
 )
 
@@ -31,7 +32,7 @@ var _ = Describe("Generate command", func() {
 		JustBeforeEach(func() {
 			ts.Start()
 			log.Println("using server URL: ", ts.URL)
-			err := c.Flags().Set(cmd.FlagOpenAIURLFull, ts.URL)
+			err := c.Flags().Set(cmd.FlagOpenAIURLFull, ts.URL+gpt3.OpenAIEndpointV1)
 			Expect(err).To(BeNil())
 		})
 		AfterEach(func() {
