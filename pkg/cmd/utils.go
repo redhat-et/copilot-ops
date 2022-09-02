@@ -5,9 +5,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/redhat-et/copilot-ops/pkg/ai"
+	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
-	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +19,7 @@ type Request struct {
 	FilemapText  string
 	UserRequest  string
 	IsWrite      bool
-	OpenAI       *gogpt.Client
+	AIClient     ai.Client
 	OutputType   string
 	OpenAIURL    string
 	NTokens      int32
@@ -30,17 +31,9 @@ const (
 	openAIURL        = "https://api.openai.com"
 )
 
-// BuildOpenAIClient Creates and configures an OpenAI client based on the given parameters.
-func BuildOpenAIClient(conf config.Config, nTokens int32, nCompletions int32, engine string, url string) *gogpt.Client {
-	// create OpenAI client
-	openAIClient := gogpt.NewOrgClient(conf.OpenAI.APIKey, conf.OpenAI.OrgID)
-	openAIClient.BaseURL = url + openAIV1Endpoint
-	return openAIClient
-}
-
 // PrepareRequest Processes the user input along with provided environment variables,
 // creating a Request object which is used for context in further requests.
-func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
+func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	request, _ := cmd.Flags().GetString(FlagRequestFull)
 	write, _ := cmd.Flags().GetBool(FlagWriteFull)
 	path, _ := cmd.Flags().GetString(FlagPathFull)
@@ -101,14 +94,15 @@ func PrepareRequest(cmd *cobra.Command, engine string) (*Request, error) {
 	filemapText := fm.EncodeToInputText()
 
 	// create OpenAI client
-	openAIClient := BuildOpenAIClient(conf, nTokens, nCompletions, engine, openAIURL)
+	// FIXME: parameterize the type of client
+	openAIClient := gpt3.CreateGPT3Client(conf.OpenAI.APIKey, &conf.OpenAI.OrgID, openAIURL)
 	r := Request{
 		Config:       conf,
 		Filemap:      fm,
 		FilemapText:  filemapText,
 		UserRequest:  request,
 		IsWrite:      write,
-		OpenAI:       openAIClient,
+		AIClient:     openAIClient,
 		OutputType:   outputType,
 		NTokens:      nTokens,
 		NCompletions: nCompletions,

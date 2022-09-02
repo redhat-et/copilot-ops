@@ -1,15 +1,14 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"path"
 	"strings"
 
+	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
-	"github.com/redhat-et/copilot-ops/pkg/openai"
 	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
@@ -60,7 +59,7 @@ func NewGenerateCmd() *cobra.Command {
 
 // RunGenerate is the implementation of the `copilot-ops generate` command.
 func RunGenerate(cmd *cobra.Command, args []string) error {
-	r, err := PrepareRequest(cmd, openai.OpenAICodeDavinciV2)
+	r, err := PrepareRequest(cmd)
 	if err != nil {
 		return err
 	}
@@ -68,29 +67,29 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	log.Printf("requesting generate from OpenAI: %s", input)
 
 	// generate a response from OpenAI
-	model := openai.OpenAICodeDavinciV2
-	resp, err := r.OpenAI.CreateCompletion(
-		context.TODO(),
-		openai.OpenAICodeDavinciV2,
-		gogpt.CompletionRequest{
-			Model:       &model,
-			Prompt:      input,
-			MaxTokens:   int(r.NTokens),
-			N:           int(r.NCompletions),
-			Temperature: 0.0,
-			Stop:        []string{openai.CompletionEndOfSequence},
+	choices, err := r.AIClient.Generate(
+		gpt3.GenerateParams{
+			Params: gogpt.CompletionRequest{
+				Model:       gpt3.OpenAICodeDavinciV2,
+				Prompt:      input,
+				MaxTokens:   int(r.NTokens),
+				N:           int(r.NCompletions),
+				Temperature: 0.0,
+				Stop:        []string{gpt3.CompletionEndOfSequence},
+			},
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("got error from OpenAI: %w", err)
+		return fmt.Errorf("could not generate files: %w", err)
 	}
 
 	// decode the response
 	r.Filemap = filemap.NewFilemap()
 	log.Printf("decoding output")
-	for _, s := range resp.Choices {
-		if err == nil {
-			err = r.Filemap.DecodeFromOutput(s.Text)
+	for _, choice := range choices {
+		err = r.Filemap.DecodeFromOutput(choice)
+		if err != nil {
+			break
 		}
 	}
 
@@ -101,7 +100,8 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	// HACK: try other way to decode the output to a fileset
 	log.Printf("decoding failed, got error: %s", err)
 	// fallback - generate new files and put the content inside
-	generateNewFiles(r, resp.Choices)
+	newFiles := generateNewFiles(choices)
+	r.Filemap.Files = newFiles
 
 	return PrintOrWriteOut(r)
 }
@@ -157,7 +157,7 @@ func instructions(withFiles bool) string {
 
 	// instruction for the generated code
 	prompt += fmt.Sprintf(`
-## %d. The new YAML, terminated by an '%s'`, numInstructions, openai.CompletionEndOfSequence)
+## %d. The new YAML, terminated by an '%s'`, numInstructions, gpt3.CompletionEndOfSequence)
 	prompt += "\n"
 
 	return prompt
@@ -194,20 +194,21 @@ func callToActionSequence(request string, encodedFiles string) string {
 
 // generateNewFiles Creates a new file for every requested completion,
 // and stores them in the "generated-by-copilot-ops" directory.
-func generateNewFiles(req *Request, sepOutput []gogpt.CompletionChoice) {
+func generateNewFiles(sepOutput []string) map[string]filemap.File {
 	newMap := make(map[string]filemap.File)
-	for i := 0; i < len(sepOutput); i++ {
+	for i, output := range sepOutput {
 		// set file name + path here
 		newFileName := "generated-by-copilot-ops" + fmt.Sprint(i+1) + ".yaml"
 		newFilePath := path.Join("generated-by-copilot-ops", newFileName)
 
+		// populate file contents
 		var newFile filemap.File
-		newFile.Content = sepOutput[i].Text
+		newFile.Content = output
 		newFile.Path = newFilePath
 		newFile.Name = newFileName
 
+		// save the file
 		newMap[newFilePath] = newFile
 	}
-
-	req.Filemap.Files = newMap
+	return newMap
 }

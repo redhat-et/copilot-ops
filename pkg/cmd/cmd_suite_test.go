@@ -6,13 +6,12 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/redhat-et/copilot-ops/pkg/openai"
+	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	gogpt "github.com/sashabaranov/go-gpt3"
 )
 
@@ -23,10 +22,6 @@ func TestCmd(t *testing.T) {
 
 // OpenAITestServer Creates a mocked OpenAI server which can pretend to handle requests during testing.
 func OpenAITestServer() *httptest.Server {
-	// FIXME: replace these patterns once this PR is merged:
-	// https://github.com/sashabaranov/go-gpt3/pull/28
-	var completionPath = regexp.MustCompile(`/v1/engines/[a-zA-Z0-9\-]+/completions`)
-
 	return httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var resBytes []byte
 		log.Println("received request at path '", r.URL.Path, "'")
@@ -35,7 +30,7 @@ func OpenAITestServer() *httptest.Server {
 			res := gogpt.EditsResponse{
 				Object:  "test-object",
 				Created: uint64(time.Now().Unix()),
-				Usage: gogpt.EditsUsage{
+				Usage: gogpt.Usage{
 					PromptTokens:     23,
 					CompletionTokens: 24,
 					TotalTokens:      47,
@@ -58,12 +53,12 @@ spec:
 			resBytes, _ = json.Marshal(res)
 			fmt.Fprint(w, string(resBytes))
 			return
-		case completionPath.MatchString(r.URL.Path):
+		case r.URL.Path == "/v1/completions":
 			res := gogpt.CompletionResponse{
 				Object:  "test-object",
 				Created: uint64(time.Now().Unix()),
-				Model:   openai.OpenAICodeDavinciV2,
-				Usage: gogpt.CompletionUsage{
+				Model:   gpt3.OpenAICodeDavinciV2,
+				Usage: gogpt.Usage{
 					PromptTokens:     23,
 					CompletionTokens: 24,
 					TotalTokens:      47,
