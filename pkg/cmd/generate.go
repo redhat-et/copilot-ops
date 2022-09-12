@@ -6,10 +6,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/redhat-et/copilot-ops/pkg/ai"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
+	"github.com/redhat-et/copilot-ops/pkg/ai/gptj"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
-	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
 
@@ -65,20 +66,11 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	}
 	input := PrepareGenerateInput(r.UserRequest, r.FilemapText)
 	log.Printf("requesting generate from OpenAI: %s", input)
-
-	// generate a response from OpenAI
-	choices, err := r.AIClient.Generate(
-		gpt3.GenerateParams{
-			Params: gogpt.CompletionRequest{
-				Model:       gpt3.OpenAICodeDavinciV2,
-				Prompt:      input,
-				MaxTokens:   int(r.NTokens),
-				N:           int(r.NCompletions),
-				Temperature: 0.0,
-				Stop:        []string{gpt3.CompletionEndOfSequence},
-			},
-		},
-	)
+	client, err := PrepareGenerateClient(r, input)
+	if err != nil {
+		return fmt.Errorf("could not create client: %w", err)
+	}
+	choices, err := client.Generate()
 	if err != nil {
 		return fmt.Errorf("could not generate files: %w", err)
 	}
@@ -104,6 +96,58 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 	r.Filemap.Files = newFiles
 
 	return PrintOrWriteOut(r)
+}
+
+// PrepareGenerateClient Returns a Generate client depending on which backend was
+// selected by the user.
+func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error) {
+	var client ai.GenerateClient
+	switch r.Backend {
+	case ai.GPT3:
+		if r.Config.OpenAI == nil {
+			return nil, fmt.Errorf("no config provided for GPT-3")
+		}
+		var orgID *string
+		if r.Config.OpenAI.OrgID != "" {
+			orgID = &r.Config.OpenAI.OrgID
+		}
+		client = gpt3.CreateGPT3GenerateClient(
+			gpt3.OpenAIConfig{
+				Token:   r.Config.OpenAI.APIKey,
+				OrgID:   orgID,
+				BaseURL: r.Config.OpenAI.URL,
+			},
+			prompt,
+			int(r.NTokens),
+			int(r.NCompletions),
+		)
+		log.Printf("created a client for generating code: %+v\n", client)
+	case ai.GPTJ:
+		// FIXME: have the config load defaults
+		if r.Config.GPTJ == nil {
+			return nil, fmt.Errorf("no config provided for GPT-J")
+		}
+		client = gptj.CreateGPTJGenerateClient(
+			gptj.Config{
+				URL: r.Config.GPTJ.URL,
+			},
+			gptj.GenerateParams{
+				Context:        prompt,
+				Temp:           0.0,
+				ResponseLength: gptj.MaxTokensGenerate,
+				RemoveInput:    true,
+			},
+		)
+	case ai.BLOOM:
+		return nil, fmt.Errorf("bloom does not implement the generate client")
+	case ai.OPT:
+		return nil, fmt.Errorf("opt does not implement the generate client")
+	case ai.Unselected:
+		return nil, fmt.Errorf("no backend selected")
+	default:
+		return nil, fmt.Errorf("invalid backend selected")
+	}
+	return client, nil
 }
 
 // PrepareGenerateInput Accepts the userInput and all of the files encoded as a string,

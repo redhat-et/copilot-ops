@@ -18,3 +18,6 @@ bin/
 
 # coverage files should be generated within CI
 cover.out
+
+# local testing
+temp/

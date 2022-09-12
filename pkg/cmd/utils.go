@@ -7,29 +7,29 @@ import (
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
+	"github.com/redhat-et/copilot-ops/pkg/ai/gptj"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/spf13/cobra"
 )
 
+// Request Defines the necessary values used when requesting new files from the selected
+// AI backends.
+// FIXME: consolidate the settings depending on the type of Model. E.g., OpenAI settings should be under their own.
 type Request struct {
 	Config       config.Config
-	Fileset      *config.ConfigFilesets
+	Fileset      *config.Filesets
 	Filemap      *filemap.Filemap
 	FilemapText  string
 	UserRequest  string
 	IsWrite      bool
-	AIClient     ai.Client
 	OutputType   string
 	OpenAIURL    string
 	NTokens      int32
 	NCompletions int32
+	// Backend Sepecifies which type of AI Backend to use.
+	Backend ai.Backend
 }
-
-const (
-	openAIV1Endpoint = "/v1"
-	openAIURL        = "https://api.openai.com"
-)
 
 // PrepareRequest Processes the user input along with provided environment variables,
 // creating a Request object which is used for context in further requests.
@@ -47,6 +47,7 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	nCompletions, _ := cmd.Flags().GetInt32(FlagNCompletionsFull)
 	outputType, _ := cmd.Flags().GetString(FlagOutputTypeFull)
 	openAIURL, _ := cmd.Flags().GetString(FlagOpenAIURLFull)
+	aiBackend, _ := cmd.Flags().GetString(FlagAIBackendFull)
 
 	log.Printf("flags:\n")
 	log.Printf(" - %-8s: %v\n", FlagRequestFull, request)
@@ -74,38 +75,47 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 		return nil, err
 	}
 
-	// WARNING we should not consider printing conf with its secret keys
-	log.Printf("Filesets: %+v\n", conf.Filesets)
-
+	// load files
 	fm := filemap.NewFilemap()
-
-	log.Printf("loading files from command line: %v\n", files)
 	if err := fm.LoadFiles(files); err != nil {
 		log.Fatalf("error loading files: %s\n", err.Error())
 	}
-
 	if len(filesets) > 0 {
 		log.Printf("loading filesets: %v\n", filesets)
 	}
 	if err := fm.LoadFilesets(filesets, conf, config.ConfigFile); err != nil {
 		log.Fatalf("error loading filesets: %s\n", err.Error())
 	}
-
 	filemapText := fm.EncodeToInputText()
 
-	// create OpenAI client
-	// FIXME: parameterize the type of client
-	openAIClient := gpt3.CreateGPT3Client(conf.OpenAI.APIKey, &conf.OpenAI.OrgID, openAIURL)
+	// select backend type
+	selectedBackend := ai.Backend(aiBackend)
+	if selectedBackend == "" {
+		selectedBackend = conf.Backend
+	}
+
+	// configure OpenAI
+	if openAIURL != "" {
+		conf.OpenAI.URL = openAIURL
+	}
+
+	// configure GPT-J
+	if conf.GPTJ == nil {
+		conf.GPTJ = &config.GPTJ{
+			URL: gptj.APIURL,
+		}
+	}
+
 	r := Request{
 		Config:       conf,
 		Filemap:      fm,
 		FilemapText:  filemapText,
 		UserRequest:  request,
 		IsWrite:      write,
-		AIClient:     openAIClient,
 		OutputType:   outputType,
 		NTokens:      nTokens,
 		NCompletions: nCompletions,
+		Backend:      selectedBackend,
 	}
 
 	return &r, nil
@@ -155,10 +165,14 @@ func AddRequestFlags(cmd *cobra.Command) {
 		"How to format output",
 	)
 
+	cmd.Flags().StringP(
+		FlagAIBackendFull, FlagAIBackendShort, string(ai.GPT3), "AI Backend to use",
+	)
+
 	_ = cmd.Flags().StringP(
 		FlagOpenAIURLFull,
 		FlagOpenAIURLShort,
-		openAIURL+openAIV1Endpoint,
+		gpt3.OpenAIURL+gpt3.OpenAIEndpointV1,
 		"OpenAI URL",
 	)
 }

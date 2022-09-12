@@ -49,7 +49,7 @@ type OpenAIConfig struct {
 // Generate Reaches out to the OpenAI GPT-3 Completions API and returns
 // a list of completions pertinent to the request.
 func (c gpt3Client) Generate() ([]string, error) {
-	if c.completionParams != nil {
+	if c.completionParams == nil {
 		return nil, fmt.Errorf("no completions params were provided")
 	}
 	// make request
@@ -113,14 +113,19 @@ func CreateGPT3GenerateClient(conf OpenAIConfig, prompt string, maxTokens, nComp
 }
 
 // CreateGPT3EditClient Returns a client based on GPT-3 capable of performing edits.
-func CreateGPT3EditClient(url, token string, orgID *string, input, instruction string, numEdits int, temperature, topP *float32) ai.EditClient {
+func CreateGPT3EditClient(
+	conf OpenAIConfig,
+	input, instruction string,
+	numEdits int, temperature,
+	topP *float32,
+) ai.EditClient {
 	var client *gogpt.Client
-	if orgID != nil {
-		client = gogpt.NewOrgClient(token, *orgID)
+	if conf.OrgID != nil {
+		client = gogpt.NewOrgClient(conf.Token, *conf.OrgID)
 	} else {
-		client = gogpt.NewClient(token)
+		client = gogpt.NewClient(conf.Token)
 	}
-	client.BaseURL = url
+	client.BaseURL = conf.BaseURL
 
 	// set params
 	model := OpenAICodeDavinciEditV1

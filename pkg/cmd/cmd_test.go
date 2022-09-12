@@ -1,8 +1,6 @@
 package cmd_test
 
 import (
-	"log"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -17,8 +15,6 @@ var _ = Describe("Root command", func() {
 		})
 	})
 	Describe("Edit command", func() {
-		It("hello world", func() {
-			log.Println("hello")
-		})
+		// FIXME: implement this
 	})
 })

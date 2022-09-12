@@ -13,6 +13,7 @@ import (
 const (
 	APIURL             = "https://api.eleuther.ai"
 	CompletionEndpoint = "completion"
+	MaxTokensGenerate  = 128
 )
 
 // GenerateParams Defines the parameters which are sent when requesting
@@ -51,7 +52,7 @@ func (c gptjClient) Generate() ([]string, error) {
 	reqBuff := bytes.NewBuffer(reqBytes)
 
 	// create request
-	urlPath := c.baseUrl + "/" + CompletionEndpoint
+	urlPath := c.baseURL + "/" + CompletionEndpoint
 	req, err := http.NewRequest(http.MethodPost, urlPath, reqBuff)
 	if err != nil {
 		return nil, fmt.Errorf("could not create request: %w", err)
@@ -76,7 +77,7 @@ func CreateGPTJGenerateClient(conf Config, params GenerateParams) ai.GenerateCli
 		httpClient = http.DefaultClient
 	}
 	c := gptjClient{
-		baseUrl:    conf.URL,
+		baseURL:    conf.URL,
 		httpClient: httpClient,
 	}
 	if c.httpClient == nil {
