@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/redhat-et/copilot-ops/pkg/ai"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
-	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 )
 
@@ -47,18 +47,12 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 	editInstruction := fmt.Sprintf("%s\n\n%s", r.UserRequest, editSuffix)
 
 	// create a client for editing
-	model := gpt3.OpenAICodeDavinciEditV1
-	responses, err := r.AIClient.Edit(
-		gpt3.EditParams{Params: gogpt.EditsRequest{
-			Model:       &model,
-			Input:       r.FilemapText,
-			Instruction: editInstruction,
-			// FIXME: edit more than one file
-			N:           1,
-			Temperature: 0.0,
-		},
-		},
-	)
+	client, err := PrepareEditClient(r, r.FilemapText, editInstruction)
+	if err != nil {
+		return fmt.Errorf("could not create client: %w", err)
+	}
+
+	responses, err := client.Edit()
 	if err != nil {
 		return fmt.Errorf("could not edit files: %w", err)
 	}
@@ -69,4 +63,34 @@ func RunEdit(cmd *cobra.Command, args []string) error {
 	}
 
 	return PrintOrWriteOut(r)
+}
+
+// PrepareEditClient Returns an AI Client which implements the EditClient interface.
+func PrepareEditClient(r *Request, input, instruction string) (ai.EditClient, error) {
+	var client ai.EditClient
+
+	switch r.Backend {
+	case ai.GPT3:
+		config := r.Config.OpenAI
+		if config == nil {
+			return nil, fmt.Errorf("no openai config provided")
+		}
+		client = gpt3.CreateGPT3EditClient(gpt3.OpenAIConfig{
+			Token:   config.APIKey,
+			OrgID:   &config.OrgID,
+			BaseURL: config.URL,
+			// FIXME: edit more than one file
+		}, input, instruction, 1, nil, nil)
+	case ai.GPTJ:
+		return nil, fmt.Errorf("editing is not implemented for gpt-j")
+	case ai.BLOOM:
+		return nil, fmt.Errorf("editing is not implemented for bloom")
+	case ai.OPT:
+		return nil, fmt.Errorf("editing is not implemented for opt")
+	case ai.Unselected:
+		return nil, fmt.Errorf("no backend selected")
+	default:
+		return nil, fmt.Errorf("selected backend does not implement the edit client")
+	}
+	return client, nil
 }

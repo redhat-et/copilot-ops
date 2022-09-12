@@ -35,8 +35,9 @@ func (c *gptjClient) sendRequest(req *http.Request, v interface{}) error {
 // gptjClient is a client implementation of GPT-J meant to implement
 // the AI Client interface.
 type gptjClient struct {
-	baseUrl    string
-	httpClient *http.Client
+	baseURL        string
+	httpClient     *http.Client
+	generateParams *GenerateParams
 }
 
 // choice Represents a list element which is returned from the GPT-J API.

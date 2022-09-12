@@ -16,7 +16,7 @@ var _ = Describe("Config", func() {
 		})
 		When("filesets are provided", func() {
 			BeforeEach(func() {
-				conf.Filesets = []config.ConfigFilesets{
+				conf.Filesets = []config.Filesets{
 					{
 						Name:  "test",
 						Files: []string{"test.txt"},
