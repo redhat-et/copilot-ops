@@ -20,6 +20,8 @@ const (
 	FlagOpenAIURLShort    = "d"
 	FlagOutputTypeFull    = "output"
 	FlagOutputTypeShort   = "o"
+	FlagAIBackendFull     = "backend"
+	FlagAIBackendShort    = "b"
 )
 
 // COMMAND Constants which define the names of commands used in the CLI.
