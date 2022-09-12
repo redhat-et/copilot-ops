@@ -17,7 +17,6 @@ const (
 
 // GenerateParams Defines the parameters which are sent when requesting
 // a response from Eleuther's publicly hosted GPT-J instance on https://6b.eleuther.ai.
-//   --data-raw '{"context":"asdfasdf","top_p":0.9,"temp":0.8,"response_length":128,"remove_input":true}' \
 type GenerateParams struct {
 	// Context Defines the prompt which will be passed into GPT-J.
 	Context        string  `json:"context"`
@@ -27,17 +26,25 @@ type GenerateParams struct {
 	RemoveInput    bool    `json:"remove_input"`
 }
 
+// Config Describes the structure needed for configuring a GPT-J client which
+// connects to Eleuther AI's endpoints.
+type Config struct {
+	// URL Defines the URL which the HTTP Client will be making requests to.
+	URL string
+	// HTTPClient Is an HTTP Client which is used in making requests.
+	HTTPClient *http.Client
+}
+
 // Generate Invokes the generate function to GPT-J. Currently, the endpoint
 // only supports a single item to be returned when generated.
-func (c gptjClient) Generate(params interface{}) ([]string, error) {
+func (c gptjClient) Generate() ([]string, error) {
 	// parse params
-	generateParams, ok := params.(GenerateParams)
-	if !ok {
-		return nil, fmt.Errorf("could not parse params")
+	if c.generateParams == nil {
+		return nil, fmt.Errorf("no params provided")
 	}
 
 	// marshal params into json bytes
-	reqBytes, err := json.Marshal(generateParams)
+	reqBytes, err := json.Marshal(c.generateParams)
 	if err != nil {
 		return nil, fmt.Errorf("could not send request: %w", err)
 	}
@@ -62,15 +69,15 @@ func (c gptjClient) Generate(params interface{}) ([]string, error) {
 	return choices, nil
 }
 
-func (c gptjClient) Edit(params interface{}) ([]string, error) {
-	return nil, fmt.Errorf("not implemented")
-}
-
-// CreateGPTJClient Returns a GPT-J client which implements the AI Client interface.
-func CreateGPTJClient(url string, client *http.Client) ai.Client {
+// CreateGPTJGenerateClient Returns a GPT-J client which implements the AI Client interface.
+func CreateGPTJGenerateClient(conf Config, params GenerateParams) ai.GenerateClient {
+	httpClient := conf.HTTPClient
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
 	c := gptjClient{
-		baseUrl:    url,
-		httpClient: client,
+		baseUrl:    conf.URL,
+		httpClient: httpClient,
 	}
 	if c.httpClient == nil {
 		c.httpClient = http.DefaultClient
