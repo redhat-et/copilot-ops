@@ -105,27 +105,18 @@ func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error)
 	switch r.Backend {
 	case ai.GPT3:
 		if r.Config.OpenAI == nil {
-			return nil, fmt.Errorf("no config provided for GPT-3")
-		}
-		var orgID *string
-		if r.Config.OpenAI.OrgID != "" {
-			orgID = &r.Config.OpenAI.OrgID
+			return nil, fmt.Errorf("no config provided for gpt-3")
 		}
 		client = gpt3.CreateGPT3GenerateClient(
-			gpt3.OpenAIConfig{
-				Token:   r.Config.OpenAI.APIKey,
-				OrgID:   orgID,
-				BaseURL: r.Config.OpenAI.URL,
-			},
+			*r.Config.OpenAI,
 			prompt,
 			int(r.NTokens),
 			int(r.NCompletions),
 		)
-		log.Printf("created a client for generating code: %+v\n", client)
 	case ai.GPTJ:
 		// FIXME: have the config load defaults
 		if r.Config.GPTJ == nil {
-			return nil, fmt.Errorf("no config provided for GPT-J")
+			return nil, fmt.Errorf("no config provided for gpt-j")
 		}
 		client = gptj.CreateGPTJGenerateClient(
 			gptj.Config{
@@ -139,7 +130,9 @@ func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error)
 			},
 		)
 	case ai.BLOOM:
-		return nil, fmt.Errorf("bloom does not implement the generate client")
+		if r.Config.BLOOM == nil {
+			return nil, fmt.Errorf("no config provided for bloom")
+		}
 	case ai.OPT:
 		return nil, fmt.Errorf("opt does not implement the generate client")
 	case ai.Unselected:

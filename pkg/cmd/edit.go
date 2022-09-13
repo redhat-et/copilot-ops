@@ -75,12 +75,7 @@ func PrepareEditClient(r *Request, input, instruction string) (ai.EditClient, er
 		if config == nil {
 			return nil, fmt.Errorf("no openai config provided")
 		}
-		client = gpt3.CreateGPT3EditClient(gpt3.OpenAIConfig{
-			Token:   config.APIKey,
-			OrgID:   &config.OrgID,
-			BaseURL: config.URL,
-			// FIXME: edit more than one file
-		}, input, instruction, 1, nil, nil)
+		client = gpt3.CreateGPT3EditClient(*r.Config.OpenAI, input, instruction, 1, nil, nil)
 	case ai.GPTJ:
 		return nil, fmt.Errorf("editing is not implemented for gpt-j")
 	case ai.BLOOM:

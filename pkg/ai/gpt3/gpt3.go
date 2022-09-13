@@ -36,14 +36,15 @@ type gpt3Client struct {
 	completionParams *gogpt.CompletionRequest
 }
 
-// OpenAIConfig Defines the values required for connecting to the OpenAI API.
-type OpenAIConfig struct {
+// Config Defines the values required for connecting to the GPT-3 API.
+// FIXME: set better names for these fields.
+type Config struct {
 	// Token Is the API token used when making requests.
-	Token string
+	Token string `json:"apiKey" yaml:"apiKey"`
 	// OrgID Is an optional value which is set by users to dictate billing information.
-	OrgID *string
+	OrgID *string `json:"orgID,omitempty" yaml:"orgID,omitempty"`
 	// BaseURL Defines where the client will reach out to contact the API.
-	BaseURL string
+	BaseURL string `json:"url" yaml:"url"`
 }
 
 // Generate Reaches out to the OpenAI GPT-3 Completions API and returns
@@ -86,7 +87,7 @@ func (c gpt3Client) Edit() ([]string, error) {
 
 // CreateGPT3GenerateClient Returns a GPT-3 client which accesses OpenAI's
 // GPT-3 endpoint to generate completions.
-func CreateGPT3GenerateClient(conf OpenAIConfig, prompt string, maxTokens, nCompletions int) ai.GenerateClient {
+func CreateGPT3GenerateClient(conf Config, prompt string, maxTokens, nCompletions int) ai.GenerateClient {
 	// create a GPT-3 Client
 	var client *gogpt.Client
 	if conf.OrgID != nil {
@@ -114,7 +115,7 @@ func CreateGPT3GenerateClient(conf OpenAIConfig, prompt string, maxTokens, nComp
 
 // CreateGPT3EditClient Returns a client based on GPT-3 capable of performing edits.
 func CreateGPT3EditClient(
-	conf OpenAIConfig,
+	conf Config,
 	input, instruction string,
 	numEdits int, temperature,
 	topP *float32,
