@@ -93,6 +93,26 @@ func (c *Config) Load() error {
 	return nil
 }
 
+// SetDefaults Sets default values for the given config object.
+func (c *Config) SetDefaults() {
+	if c.OpenAI == nil {
+		c.OpenAI = &gpt3.Config{
+			BaseURL: gpt3.OpenAIURL,
+		}
+	}
+	// configure GPT-J
+	if c.GPTJ == nil {
+		c.GPTJ = &gptj.Config{
+			URL: gptj.APIURL,
+		}
+	}
+	if c.BLOOM == nil {
+		c.BLOOM = &bloom.Config{
+			URL: bloom.APIURL,
+		}
+	}
+}
+
 // FindFileset Returns a fileset with the matching name,
 // or nil if none exists.
 func (c *Config) FindFileset(name string) *Filesets {

@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
-	"github.com/redhat-et/copilot-ops/pkg/ai/bloom"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
-	"github.com/redhat-et/copilot-ops/pkg/ai/gptj"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/spf13/cobra"
@@ -76,6 +74,12 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	if err := conf.Load(); err != nil {
 		return nil, err
 	}
+	conf.SetDefaults()
+	// override OpenAI URL
+	// TODO: generalize overriding default values via CLI
+	if openAIURL != "" {
+		conf.OpenAI.BaseURL = openAIURL
+	}
 
 	// load files
 	fm := filemap.NewFilemap()
@@ -96,26 +100,8 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 		selectedBackend = conf.Backend
 	}
 
-	// configure OpenAI
+	// configure backends
 	// FIXME: create default config methods for these
-	if openAIURL != "" {
-		conf.OpenAI.BaseURL = openAIURL
-	}
-
-	// configure GPT-J
-	if conf.GPTJ == nil {
-		conf.GPTJ = &gptj.Config{
-			URL: gptj.APIURL,
-		}
-	}
-
-	// default for bloom
-	if conf.BLOOM == nil {
-		conf.BLOOM = &bloom.Config{
-			URL: bloom.APIURL,
-		}
-	}
-
 	r := Request{
 		Config:       conf,
 		Filemap:      fm,
