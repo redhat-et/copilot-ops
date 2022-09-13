@@ -50,7 +50,7 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	openAIURL, _ := cmd.Flags().GetString(FlagOpenAIURLFull)
 	aiBackend, _ := cmd.Flags().GetString(FlagAIBackendFull)
 
-	log.Printf("flags:\n")
+	log.Println("flags:")
 	log.Printf(" - %-8s: %v\n", FlagRequestFull, request)
 	log.Printf(" - %-8s: %v\n", FlagWriteFull, write)
 	log.Printf(" - %-8s: %v\n", FlagPathFull, path)
@@ -59,6 +59,7 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	log.Printf(" - %-8s: %v\n", FlagNTokensFull, nTokens)
 	log.Printf(" - %-8s: %v\n", FlagNCompletionsFull, nCompletions)
 	log.Printf(" - %-8s: %v\n", FlagOutputTypeFull, outputType)
+	log.Printf(" - %-8s: %v\n", FlagAIBackendFull, aiBackend)
 
 	// Handle --path by changing the working directory
 	// so that every file name we refer to is relative to path
