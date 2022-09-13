@@ -14,7 +14,7 @@ var _ = Describe("Gpt3 Generate Client", func() {
 	BeforeEach(func() {
 		// create client
 		gpt3Client = gpt3.CreateGPT3GenerateClient(
-			gpt3.OpenAIConfig{
+			gpt3.Config{
 				Token:   "abc",
 				OrgID:   nil,
 				BaseURL: "http://example.com",

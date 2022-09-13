@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
+	"github.com/redhat-et/copilot-ops/pkg/ai/bloom"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gptj"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
@@ -95,14 +96,22 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	}
 
 	// configure OpenAI
+	// FIXME: create default config methods for these
 	if openAIURL != "" {
-		conf.OpenAI.URL = openAIURL
+		conf.OpenAI.BaseURL = openAIURL
 	}
 
 	// configure GPT-J
 	if conf.GPTJ == nil {
-		conf.GPTJ = &config.GPTJ{
+		conf.GPTJ = &gptj.Config{
 			URL: gptj.APIURL,
+		}
+	}
+
+	// default for bloom
+	if conf.BLOOM == nil {
+		conf.BLOOM = &bloom.Config{
+			URL: bloom.APIURL,
 		}
 	}
 
