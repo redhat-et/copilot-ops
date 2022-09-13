@@ -2,6 +2,7 @@ package gptj
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -53,7 +54,7 @@ func (c gptjClient) Generate() ([]string, error) {
 
 	// create request
 	urlPath := c.baseURL + "/" + CompletionEndpoint
-	req, err := http.NewRequest(http.MethodPost, urlPath, reqBuff)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, urlPath, reqBuff)
 	if err != nil {
 		return nil, fmt.Errorf("could not create request: %w", err)
 	}

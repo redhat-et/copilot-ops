@@ -2,6 +2,7 @@ package bloom
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -68,7 +69,7 @@ func (c bloomClient) Generate() ([]string, error) {
 	reqBuff := bytes.NewBuffer(reqBytes)
 
 	// create request
-	req, err := http.NewRequest(http.MethodPost, c.BaseURL, reqBuff)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, c.BaseURL, reqBuff)
 	if err != nil {
 		return nil, fmt.Errorf("could not create request: %w", err)
 	}
