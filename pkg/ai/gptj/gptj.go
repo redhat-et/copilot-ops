@@ -76,8 +76,9 @@ func (c gptjClient) Generate() ([]string, error) {
 // CreateGPTJGenerateClient Returns a GPT-J client which implements the AI Client interface.
 func CreateGPTJGenerateClient(conf Config, params GenerateParams) ai.GenerateClient {
 	c := gptjClient{
-		baseURL:    conf.URL,
-		httpClient: http.DefaultClient,
+		baseURL:        conf.URL,
+		httpClient:     http.DefaultClient,
+		generateParams: &params,
 	}
 	return c
 }

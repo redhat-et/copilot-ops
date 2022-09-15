@@ -3,10 +3,12 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"path"
 	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
+	"github.com/redhat-et/copilot-ops/pkg/ai/bloom"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gptj"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
@@ -65,7 +67,6 @@ func RunGenerate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	input := PrepareGenerateInput(r.UserRequest, r.FilemapText)
-	log.Printf("requesting generate from OpenAI: %s", input)
 	client, err := PrepareGenerateClient(r, input)
 	if err != nil {
 		return fmt.Errorf("could not create client: %w", err)
@@ -131,6 +132,19 @@ func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error)
 		if r.Config.BLOOM == nil {
 			return nil, fmt.Errorf("no config provided for bloom")
 		}
+		randomSeed := rand.Int() % 100
+		client = bloom.CreateBloomGenerateClient(
+			*r.Config.BLOOM,
+			prompt,
+			bloom.GenerateParameters{
+				Seed:          randomSeed,
+				EarlyStopping: false,
+				MaxNewTokens:  bloom.DefaultTokenSize,
+				// sampling reduces accuracy
+				DoSample: false,
+				TopP:     0.9,
+			},
+		)
 	case ai.OPT:
 		return nil, fmt.Errorf("opt does not implement the generate client")
 	case ai.Unselected:
