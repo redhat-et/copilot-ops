@@ -39,8 +39,8 @@ type gpt3Client struct {
 // Config Defines the values required for connecting to the GPT-3 API.
 // FIXME: set better names for these fields.
 type Config struct {
-	// Token Is the API token used when making requests.
-	Token string `json:"apiKey" yaml:"apiKey"`
+	// APIKey Is the API token used when making requests.
+	APIKey string `json:"apiKey" yaml:"apiKey"`
 	// OrgID Is an optional value which is set by users to dictate billing information.
 	OrgID *string `json:"orgID,omitempty" yaml:"orgID,omitempty"`
 	// BaseURL Defines where the client will reach out to contact the API.
@@ -54,7 +54,7 @@ func (c gpt3Client) Generate() ([]string, error) {
 		return nil, fmt.Errorf("no completions params were provided")
 	}
 	// make request
-	resp, err := c.client.CreateCompletion(context.Background(), *c.completionParams)
+	resp, err := c.client.CreateCompletion(context.TODO(), *c.completionParams)
 	if err != nil {
 		return nil, err
 	}
@@ -89,17 +89,10 @@ func (c gpt3Client) Edit() ([]string, error) {
 // GPT-3 endpoint to generate completions.
 func CreateGPT3GenerateClient(conf Config, prompt string, maxTokens, nCompletions int) ai.GenerateClient {
 	// create a GPT-3 Client
-	var client *gogpt.Client
-	if conf.OrgID != nil {
-		client = gogpt.NewOrgClient(conf.Token, *conf.OrgID)
-	} else {
-		client = gogpt.NewClient(conf.Token)
-	}
-	client.BaseURL = conf.BaseURL
-
+	client := createGPT3Client(conf)
 	// create params for getting a completion
 	params := &gogpt.CompletionRequest{
-		Model:       OpenAICodeDavinciEditV1,
+		Model:       OpenAICodeDavinciV2,
 		Prompt:      prompt,
 		MaxTokens:   maxTokens,
 		N:           nCompletions,
@@ -120,14 +113,7 @@ func CreateGPT3EditClient(
 	numEdits int, temperature,
 	topP *float32,
 ) ai.EditClient {
-	var client *gogpt.Client
-	if conf.OrgID != nil {
-		client = gogpt.NewOrgClient(conf.Token, *conf.OrgID)
-	} else {
-		client = gogpt.NewClient(conf.Token)
-	}
-	client.BaseURL = conf.BaseURL
-
+	client := createGPT3Client(conf)
 	// set params
 	model := OpenAICodeDavinciEditV1
 	editParams := &gogpt.EditsRequest{
@@ -147,4 +133,15 @@ func CreateGPT3EditClient(
 		client:     *client,
 		editParams: editParams,
 	}
+}
+
+// createGPT3Client Returns a go-gpt client using the provided config.
+func createGPT3Client(conf Config) (client *gogpt.Client) {
+	if conf.OrgID != nil {
+		client = gogpt.NewOrgClient(conf.APIKey, *conf.OrgID)
+	} else {
+		client = gogpt.NewClient(conf.APIKey)
+	}
+	// client.BaseURL = conf.BaseURL
+	return
 }
