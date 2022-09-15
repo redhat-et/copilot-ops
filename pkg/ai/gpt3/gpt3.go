@@ -142,6 +142,6 @@ func createGPT3Client(conf Config) (client *gogpt.Client) {
 	} else {
 		client = gogpt.NewClient(conf.APIKey)
 	}
-	// client.BaseURL = conf.BaseURL
+	client.BaseURL = conf.BaseURL
 	return
 }
