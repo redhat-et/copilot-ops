@@ -15,7 +15,7 @@ var _ = Describe("Gpt3 Generate Client", func() {
 		// create client
 		gpt3Client = gpt3.CreateGPT3GenerateClient(
 			gpt3.Config{
-				Token:   "abc",
+				APIKey:  "abc",
 				OrgID:   nil,
 				BaseURL: "http://example.com",
 			},

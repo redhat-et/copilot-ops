@@ -97,7 +97,7 @@ func (c *Config) Load() error {
 func (c *Config) SetDefaults() {
 	if c.OpenAI == nil {
 		c.OpenAI = &gpt3.Config{
-			BaseURL: gpt3.OpenAIURL,
+			BaseURL: gpt3.OpenAIURL + gpt3.OpenAIEndpointV1,
 		}
 	}
 	// configure GPT-J

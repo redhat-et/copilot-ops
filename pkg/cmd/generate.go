@@ -119,9 +119,7 @@ func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error)
 			return nil, fmt.Errorf("no config provided for gpt-j")
 		}
 		client = gptj.CreateGPTJGenerateClient(
-			gptj.Config{
-				URL: r.Config.GPTJ.URL,
-			},
+			*r.Config.GPTJ,
 			gptj.GenerateParams{
 				Context:        prompt,
 				Temp:           0.0,

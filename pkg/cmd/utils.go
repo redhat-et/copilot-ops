@@ -57,7 +57,9 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	log.Printf(" - %-8s: %v\n", FlagNTokensFull, nTokens)
 	log.Printf(" - %-8s: %v\n", FlagNCompletionsFull, nCompletions)
 	log.Printf(" - %-8s: %v\n", FlagOutputTypeFull, outputType)
-	log.Printf(" - %-8s: %v\n", FlagAIBackendFull, aiBackend)
+
+	log.Printf(" - %-8s: %q\n", FlagOpenAIURLFull, openAIURL)
+	log.Printf(" - %-8s: %q\n", FlagAIBackendFull, aiBackend)
 
 	// Handle --path by changing the working directory
 	// so that every file name we refer to is relative to path
@@ -74,9 +76,9 @@ func PrepareRequest(cmd *cobra.Command) (*Request, error) {
 	if err := conf.Load(); err != nil {
 		return nil, err
 	}
+	// TODO: generalize overriding default values via CLI
 	conf.SetDefaults()
 	// override OpenAI URL
-	// TODO: generalize overriding default values via CLI
 	if openAIURL != "" {
 		conf.OpenAI.BaseURL = openAIURL
 	}
@@ -165,7 +167,7 @@ func AddRequestFlags(cmd *cobra.Command) {
 		FlagAIBackendFull, FlagAIBackendShort, string(ai.GPT3), "AI Backend to use",
 	)
 
-	_ = cmd.Flags().StringP(
+	cmd.Flags().StringP(
 		FlagOpenAIURLFull,
 		FlagOpenAIURLShort,
 		gpt3.OpenAIURL+gpt3.OpenAIEndpointV1,
