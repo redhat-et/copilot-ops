@@ -67,6 +67,9 @@ func (c bloomClient) Generate() ([]string, error) {
 		return nil, fmt.Errorf("could not send request: %w", err)
 	}
 	reqBuff := bytes.NewBuffer(reqBytes)
+	if reqBuff == nil {
+		return nil, fmt.Errorf("could not initialize buffer")
+	}
 
 	// create request
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, c.BaseURL, reqBuff)
