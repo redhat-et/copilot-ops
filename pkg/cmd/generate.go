@@ -132,6 +132,7 @@ func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error)
 		if r.Config.BLOOM == nil {
 			return nil, fmt.Errorf("no config provided for bloom")
 		}
+		//nolint:gosec,gomnd // this random number hardly matters
 		randomSeed := rand.Int() % 100
 		client = bloom.CreateBloomGenerateClient(
 			*r.Config.BLOOM,
@@ -142,7 +143,8 @@ func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error)
 				MaxNewTokens:  bloom.DefaultTokenSize,
 				// sampling reduces accuracy
 				DoSample: false,
-				TopP:     0.9,
+				//nolint:gomnd // this is the default
+				TopP: 0.9,
 			},
 		)
 	case ai.OPT:
