@@ -135,8 +135,10 @@ func PrintOrWriteOut(r *Request) error {
 	if err != nil {
 		return err
 	}
-	// stringOut := strings.ReplaceAll(fmOutput, "\\n", "\n")
-	fmt.Printf("%s\n", fmOutput)
+	_, err = os.Stdout.WriteString(fmOutput)
+	if err != nil {
+		return fmt.Errorf("could not write to stdout: %w", err)
+	}
 
 	return nil
 }
