@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
@@ -135,8 +135,8 @@ func PrintOrWriteOut(r *Request) error {
 	if err != nil {
 		return err
 	}
-	stringOut := strings.ReplaceAll(fmOutput, "\\n", "\n")
-	log.Printf("\n%s\n", stringOut)
+	// stringOut := strings.ReplaceAll(fmOutput, "\\n", "\n")
+	fmt.Printf("%s\n", fmOutput)
 
 	return nil
 }
