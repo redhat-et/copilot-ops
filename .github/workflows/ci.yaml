@@ -20,8 +20,11 @@ on:
       - ".github/workflows/bot.yaml"
       - ".github/workflows/todo-issue.yaml"
 
-jobs:
+env:
+  COPILOT_OPS_IMG: "quay.io/copilot-ops/copilot-ops"
+  COPILOT_OPS_IMG_TAG: "latest"
 
+jobs:
   test:
     runs-on: ubuntu-latest
     steps:
@@ -77,3 +80,20 @@ jobs:
         with:
           name: copilot-ops-darwin-arm64
           path: copilot-ops-darwin-arm64
+
+  build-image:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      - name: Build Container Image
+        run: IMG="${COPILOT_OPS_IMG}"; IMG_TAG="${COPILOT_OPS_IMG_TAG}"; make docker-build
+      - name: Export Container Image
+        run: docker save -o /tmp/image.tar "${COPILOT_OPS_IMG}:${COPILOT_OPS_IMG_TAG}"
+      - name: Save Container Image as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: copilot-ops-image
+          path: /tmp/image.tar
+      
