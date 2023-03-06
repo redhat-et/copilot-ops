@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	gogpt "github.com/sashabaranov/go-openai"
 )
 
 const (
@@ -28,7 +28,7 @@ type EditParams struct {
 	Params gogpt.EditsRequest
 }
 
-// gpt3Client Is a wrapper struct around the go-gpt3
+// gpt3Client Is a wrapper struct around the go-openai
 // package.
 type gpt3Client struct {
 	client           gogpt.Client

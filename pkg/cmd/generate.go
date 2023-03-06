@@ -3,14 +3,11 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"path"
 	"strings"
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
-	"github.com/redhat-et/copilot-ops/pkg/ai/bloom"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
-	"github.com/redhat-et/copilot-ops/pkg/ai/gptj"
 	"github.com/redhat-et/copilot-ops/pkg/cmd/config"
 	"github.com/redhat-et/copilot-ops/pkg/filemap"
 	"github.com/spf13/cobra"
@@ -115,38 +112,9 @@ func PrepareGenerateClient(r *Request, prompt string) (ai.GenerateClient, error)
 			int(r.NCompletions),
 		)
 	case ai.GPTJ:
-		// FIXME: have the config load defaults
-		if r.Config.GPTJ == nil {
-			return nil, fmt.Errorf("no config provided for gpt-j")
-		}
-		client = gptj.CreateGPTJGenerateClient(
-			*r.Config.GPTJ,
-			gptj.GenerateParams{
-				Context:        prompt,
-				Temp:           0.0,
-				ResponseLength: gptj.MaxTokensGenerate,
-				RemoveInput:    true,
-			},
-		)
+		return nil, fmt.Errorf("gpt-j does not implement the generate client")
 	case ai.BLOOM:
-		if r.Config.BLOOM == nil {
-			return nil, fmt.Errorf("no config provided for bloom")
-		}
-		//nolint:gosec,gomnd // this random number hardly matters
-		randomSeed := rand.Int() % 100
-		client = bloom.CreateBloomGenerateClient(
-			*r.Config.BLOOM,
-			prompt,
-			bloom.GenerateParameters{
-				Seed:          randomSeed,
-				EarlyStopping: false,
-				MaxNewTokens:  bloom.DefaultTokenSize,
-				// sampling reduces accuracy
-				DoSample: false,
-				//nolint:gomnd // this is the default
-				TopP: 0.9,
-			},
-		)
+		return nil, fmt.Errorf("bloom does not implement the generate client")
 	case ai.OPT:
 		return nil, fmt.Errorf("opt does not implement the generate client")
 	case ai.Unselected:
