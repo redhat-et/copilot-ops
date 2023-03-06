@@ -11,12 +11,13 @@ import (
 // NewAskCmd creates a new ask command which communicates with the ChatGPT API.
 func NewAskCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     CommandAsk,
-		Short:   "Ask ChatGPT a question and get an answer",
-		Long:    "Ask talks to the ChatGPT API and returns the response in your terminal.",
-		Example: "	copilot-ops ask 'Write a BASH script that checks the weather once every 5 minutes and sends an email if it's raining.'",
-		RunE:    RunAsk,
-		Args:    cobra.ExactArgs(1),
+		Use:   CommandAsk,
+		Short: "Ask ChatGPT a question and get an answer",
+		Long:  "Ask talks to the ChatGPT API and returns the response in your terminal.",
+		Example: "	copilot-ops ask 'Write a BASH script that checks the weather once every 5 minutes" +
+			" and sends an email if it's raining.'",
+		RunE: RunAsk,
+		Args: cobra.ExactArgs(1),
 	}
 
 	// add flags
