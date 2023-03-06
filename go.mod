@@ -1,10 +1,11 @@
 module github.com/redhat-et/copilot-ops
 
-go 1.18
+go 1.20
 
 require (
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
+	github.com/sashabaranov/go-openai v1.4.2
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 )
@@ -17,7 +18,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
-	github.com/sashabaranov/go-gpt3 v0.0.0-20220811094137-be08f204f03a // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

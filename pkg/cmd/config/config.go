@@ -4,9 +4,7 @@ import (
 	"errors"
 
 	"github.com/redhat-et/copilot-ops/pkg/ai"
-	"github.com/redhat-et/copilot-ops/pkg/ai/bloom"
 	"github.com/redhat-et/copilot-ops/pkg/ai/gpt3"
-	"github.com/redhat-et/copilot-ops/pkg/ai/gptj"
 	"github.com/spf13/viper"
 )
 
@@ -25,10 +23,6 @@ type Config struct {
 	// Backend Defines which AI backend should be used in order to generate completions.
 	// Valid models include: gpt-3, gpt-j, opt, and bloom.
 	Backend ai.Backend `json:"backend"`
-	// GPTJ Defines the configuration options for using GPT-J.
-	GPTJ *gptj.Config `json:"gptj,omitempty" yaml:"gptj,omitempty"`
-	// BLOOM Defines the configuration for using BLOOM.
-	BLOOM *bloom.Config `json:"bloom,omitempty" yaml:"bloom,omitempty"`
 }
 
 type Filesets struct {
@@ -98,17 +92,6 @@ func (c *Config) SetDefaults() {
 	if c.OpenAI == nil {
 		c.OpenAI = &gpt3.Config{
 			BaseURL: gpt3.OpenAIURL + gpt3.OpenAIEndpointV1,
-		}
-	}
-	// configure GPT-J
-	if c.GPTJ == nil {
-		c.GPTJ = &gptj.Config{
-			URL: gptj.APIURL,
-		}
-	}
-	if c.BLOOM == nil {
-		c.BLOOM = &bloom.Config{
-			URL: bloom.APIURL,
 		}
 	}
 }
