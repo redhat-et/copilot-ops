@@ -29,7 +29,7 @@ func OpenAITestServer() *httptest.Server {
 		case r.URL.Path == "/v1/edits":
 			res := gogpt.EditsResponse{
 				Object:  "test-object",
-				Created: uint64(time.Now().Unix()),
+				Created: time.Now().Unix(),
 				Usage: gogpt.Usage{
 					PromptTokens:     23,
 					CompletionTokens: 24,
@@ -56,7 +56,7 @@ spec:
 		case r.URL.Path == "/v1/completions":
 			res := gogpt.CompletionResponse{
 				Object:  "test-object",
-				Created: uint64(time.Now().Unix()),
+				Created: time.Now().Unix(),
 				Model:   gpt3.OpenAICodeDavinciV2,
 				Usage: gogpt.Usage{
 					PromptTokens:     23,

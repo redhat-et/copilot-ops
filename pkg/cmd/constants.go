@@ -28,10 +28,11 @@ const (
 const (
 	CommandEdit     = "edit"
 	CommandGenerate = "generate"
+	CommandAsk      = "ask"
 )
 
 // Miscellaneous constants used in the CLI.
 const (
-	DefaultTokens      = 512
+	DefaultTokens      = 1000
 	DefaultCompletions = 1
 )

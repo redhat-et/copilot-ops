@@ -136,12 +136,13 @@ func CreateGPT3EditClient(
 }
 
 // createGPT3Client Returns a go-gpt client using the provided config.
-func createGPT3Client(conf Config) (client *gogpt.Client) {
+func createGPT3Client(conf Config) *gogpt.Client {
+	orgID := ""
 	if conf.OrgID != nil {
-		client = gogpt.NewOrgClient(conf.APIKey, *conf.OrgID)
-	} else {
-		client = gogpt.NewClient(conf.APIKey)
+		orgID = *conf.OrgID
 	}
-	client.BaseURL = conf.BaseURL
-	return
+	return gogpt.NewClientWithConfig(gogpt.ClientConfig{
+		BaseURL: conf.BaseURL,
+		OrgID:   orgID,
+	})
 }
